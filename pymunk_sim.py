@@ -9,8 +9,19 @@ HEIGHT = 600
 
 window = pygame.display.set_mode((WIDTH, HEIGHT))
 
-def draw(space, window, draw_options):
+def draw(space, window, draw_options, debug=False):
     window.fill("white")
+
+    if debug:
+        font = pygame.font.Font(None, 36)
+
+        body = space.bodies[0]
+        velocity = body.velocity  
+        velocity_x = round(velocity.x, 2)
+        velocity_text = font.render(f"Vx: ({velocity_x})", True, (0, 0, 0))
+
+
+    window.blit(velocity_text, (10, 10))
     space.debug_draw(draw_options)
 
 def create_rect_obj(space, mass, size, pos):
@@ -39,7 +50,7 @@ def run(window, width, height):
     rotating_collision_type = 2
     # pendulum base
     base_size = (20, 20)
-    base_body, base_shape = pendulum_base = create_rect_obj(space, mass = 0.5, size = base_size, pos = (WIDTH/2,HEIGHT/2))
+    base_body, base_shape = pendulum_base = create_rect_obj(space, mass = 1, size = base_size, pos = (WIDTH/2,HEIGHT/2))
     base_shape.collision_type = base_collision_type  # Set collision type
 
     # prismatic joint
@@ -53,7 +64,7 @@ def run(window, width, height):
 
     # pendulum link
     link_size = (4, 100)
-    link_body, link_shape = create_rect_obj(space, mass = 2, size = link_size, pos = (WIDTH/2,HEIGHT/2+link_size[1]/2))
+    link_body, link_shape = create_rect_obj(space, mass = 1, size = link_size, pos = (WIDTH/2,HEIGHT/2+link_size[1]/2))
     link_shape.collision_type = rotating_collision_type  # Set collision type
 
     # revolute joint
@@ -64,7 +75,7 @@ def run(window, width, height):
     handler = space.add_collision_handler(base_collision_type, rotating_collision_type)
     handler.begin = lambda arbiter, space, data: False  # Ignore collisions
 
-    force_magnitude = 500
+    force_magnitude = 1000
 
     ############################# MAINLOOP #############################
     while run:
@@ -81,7 +92,7 @@ def run(window, width, height):
                 force_vector = (force_magnitude, 0)
                 base_body.apply_force_at_local_point(force_vector, (0, 0))
 
-        draw(space, window, draw_options)
+        draw(space, window, draw_options, debug=True)
         space.step(dt)
 
         clock.tick(FPS)
