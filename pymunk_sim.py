@@ -49,7 +49,14 @@ def run(window, width, height):
     rotating_collision_type = 2
     # pendulum base
     base_size = (20, 20)
-    base_body, base_shape = pendulum_base = create_rect_obj(space, mass = 2, size = base_size, pos = (WIDTH/2,HEIGHT/2))
+
+    base_body, base_shape = pendulum_base = create_rect_obj(
+        space, 
+        mass = 5, 
+        size = base_size, 
+        pos = (WIDTH/2,HEIGHT/2),
+        color = (0, 102, 153,255))
+
     base_shape.collision_type = base_collision_type  # Set collision type
 
     # prismatic joint
@@ -57,17 +64,17 @@ def run(window, width, height):
     groove_start = (0.1*WIDTH, HEIGHT/2); groove_end = (0.9*WIDTH, HEIGHT/2)   
     groove_joint = pymunk.GrooveJoint(static_body, base_body, groove_start, groove_end, (0, 0))
     space.add(groove_joint)
-
     gear_joint = pymunk.GearJoint(static_body, base_body, 0, 1) 
     space.add(gear_joint)
 
     # pendulum link
     link_size = (4, 100)
     link_body, link_shape = create_rect_obj(
-                                space, mass = 1, 
-                                size = link_size, 
-                                pos = (WIDTH/2,HEIGHT/2+link_size[1]/2),
-                                color = (255, 153, 51, 255))
+        space, 
+        mass = 2, 
+        size = link_size, 
+        pos = (WIDTH/2,HEIGHT/2+link_size[1]/2),
+        color = (255, 153, 51, 255))
 
     link_shape.collision_type = rotating_collision_type  # Set collision type
 
@@ -80,7 +87,7 @@ def run(window, width, height):
     handler = space.add_collision_handler(base_collision_type, rotating_collision_type)
     handler.begin = lambda arbiter, space, data: False 
 
-    force_magnitude = 1000
+    force_magnitude = 1500
 
     ############################# MAINLOOP #############################
     while run:
@@ -88,6 +95,10 @@ def run(window, width, height):
             if event.type == pygame.QUIT :
                 run = False
                 break
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_q:
+                    run = False
+                    break
 
             keys = pygame.key.get_pressed()
             if keys[pygame.K_a]:
