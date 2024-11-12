@@ -33,6 +33,8 @@ def run(window, width, height):
 
     draw_options = pymunk.pygame_util.DrawOptions(window)
 
+
+    ######################## BODIES AND JOINTS ########################
     base_collision_type = 1
     rotating_collision_type = 2
     # pendulum base
@@ -63,6 +65,8 @@ def run(window, width, height):
     handler.begin = lambda arbiter, space, data: False  # Ignore collisions
 
     force_magnitude = 500
+
+    ############################# MAINLOOP #############################
     while run:
         for event in pygame.event.get():
             if event.type == pygame.QUIT :
