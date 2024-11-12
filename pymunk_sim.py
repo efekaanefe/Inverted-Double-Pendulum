@@ -9,27 +9,27 @@ HEIGHT = 600
 
 window = pygame.display.set_mode((WIDTH, HEIGHT))
 
+
 def draw(space, window, draw_options, debug=False):
-    window.fill("white")
+    window.fill("gray")
 
     if debug:
         font = pygame.font.Font(None, 36)
-
         body = space.bodies[0]
         velocity = body.velocity  
         velocity_x = round(velocity.x, 2)
         velocity_text = font.render(f"Vx: ({velocity_x})", True, (0, 0, 0))
 
-
     window.blit(velocity_text, (10, 10))
     space.debug_draw(draw_options)
 
-def create_rect_obj(space, mass, size, pos):
+def create_rect_obj(space, mass, size, pos, color = (0, 102, 153,255)):
     width, height = size
     inertia = pymunk.moment_for_box(mass, (width, height))
     body = pymunk.Body(mass, inertia)
     body.position = pos
     shape = pymunk.Poly.create_box(body, (width, height))
+    shape.color = color
     space.add(body, shape)
     return body, shape # shape is probably unimportant
 
@@ -40,17 +40,16 @@ def run(window, width, height):
     dt = 1/FPS
 
     space = pymunk.Space()    
-    space.gravity = (0, 9.81)
+    space.gravity = (0, 98.1)
 
     draw_options = pymunk.pygame_util.DrawOptions(window)
-
 
     ######################## BODIES AND JOINTS ########################
     base_collision_type = 1
     rotating_collision_type = 2
     # pendulum base
     base_size = (20, 20)
-    base_body, base_shape = pendulum_base = create_rect_obj(space, mass = 1, size = base_size, pos = (WIDTH/2,HEIGHT/2))
+    base_body, base_shape = pendulum_base = create_rect_obj(space, mass = 2, size = base_size, pos = (WIDTH/2,HEIGHT/2))
     base_shape.collision_type = base_collision_type  # Set collision type
 
     # prismatic joint
@@ -64,7 +63,12 @@ def run(window, width, height):
 
     # pendulum link
     link_size = (4, 100)
-    link_body, link_shape = create_rect_obj(space, mass = 1, size = link_size, pos = (WIDTH/2,HEIGHT/2+link_size[1]/2))
+    link_body, link_shape = create_rect_obj(
+                                space, mass = 1, 
+                                size = link_size, 
+                                pos = (WIDTH/2,HEIGHT/2+link_size[1]/2),
+                                color = (255, 153, 51, 255))
+
     link_shape.collision_type = rotating_collision_type  # Set collision type
 
     # revolute joint
@@ -72,8 +76,9 @@ def run(window, width, height):
     revolute_joint = pymunk.PivotJoint(base_body, link_body, pivot_point)
     space.add(revolute_joint)
 
+    # Ignore collisions
     handler = space.add_collision_handler(base_collision_type, rotating_collision_type)
-    handler.begin = lambda arbiter, space, data: False  # Ignore collisions
+    handler.begin = lambda arbiter, space, data: False 
 
     force_magnitude = 1000
 
