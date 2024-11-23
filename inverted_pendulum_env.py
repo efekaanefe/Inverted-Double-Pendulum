@@ -15,7 +15,8 @@ class InvertedPendulumEnv(gym.Env):
                  link_mass = 2,
                  groove_length = 600,
                  max_angle=np.pi/2,
-                 max_position=400):
+                 max_position=400,
+                 max_steps = 1000):
        
         super(InvertedPendulumEnv, self).__init__()
         
@@ -30,8 +31,10 @@ class InvertedPendulumEnv(gym.Env):
         self.groove_length = groove_length
         self.max_angle = max_angle
         self.max_position = max_position
+        self.max_steps = max_steps
 
         self.groove_y = 0
+        self.steps = 0
         
         # Pymunk space
         self.space = pymunk.Space()
@@ -101,26 +104,30 @@ class InvertedPendulumEnv(gym.Env):
         
         obs = np.array([x, x_dot, theta, theta_dot], dtype=np.float32)
         
-        # Check termination conditions
-        done = bool(
-            x < -self.max_position or x > self.max_position or
-            abs(theta) > self.max_angle
-        )
-
-        done = False
+         # Calculate reward
+        base_center_dist = abs(x - (self.groove_length / 2)) / (self.groove_length / 2)
+        link_perpendicularity = 1 - (abs(theta) / self.max_angle)
+        velocity_penalty = (abs(x_dot) + abs(theta_dot)) / 10.0
         
-        # Reward is higher for keeping the pendulum upright and centered
-        reward = 1.0 - (abs(theta) / self.max_angle)
-        if done:
-            reward -= 10.0
+        reward = 1.0 * (1 - base_center_dist) + 1.0 * link_perpendicularity - 0.5 * velocity_penalty
+        
+        # Clip reward to avoid extreme values
+        reward = max(reward, -10.0)       
+
+        self.steps += 1
+        done = bool(
+            # x < -self.max_position or x > self.max_position or
+            # abs(theta) > self.max_angle or
+            self.steps >= self.max_steps
+        )
         
         return obs, reward, done, {}
 
     def reset(self):
         # Reset positions and velocities
-        self.base_body.position = (400, 300)
+        self.base_body.position = (self.groove_length/2, self.groove_y)
         self.base_body.velocity = (0, 0)
-        self.link_body.position = (400, 400)
+        self.link_body.position = (self.groove_length/2, self.groove_y + self.link_size[1]/2)
         self.link_body.angle = 0
         self.link_body.angular_velocity = 0
         self.link_body.velocity = (0, 0)

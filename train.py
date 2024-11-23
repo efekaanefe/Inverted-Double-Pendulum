@@ -12,14 +12,20 @@ if __name__ == "__main__":
         link_size=(6, 250), 
         link_mass=2,
         max_angle=np.pi/3, 
-        max_position=500)
+        max_position=500,
+        max_steps = 1000)
 
     obs = env.reset()
 
     for _ in range(1000):
         action = env.action_space.sample()  # Replace with a trained policy for better control
         obs, reward, done, info = env.step(action)
-        print(action, obs)
+        
+        # debug
+        print(_,done,action, obs)
+
         if done:
             break
+
+
     env.close()
