@@ -109,10 +109,12 @@ class InvertedPendulumEnv(gym.Env):
         link_perpendicularity = 1 - abs(theta - np.pi)/(2*np.pi)
         velocity_penalty = (abs(x_dot) + abs(theta_dot)) / 10.0
         
-        reward = 1.0 * (1 - base_center_dist) + 1.0 * link_perpendicularity - 0.5 * velocity_penalty
+        reward = (1.0 * (1 - base_center_dist) + 
+                1.0 * link_perpendicularity - 
+                0.5 * velocity_penalty)
         
         # Clip reward to avoid extreme values
-        reward = max(reward, -10.0)       
+        # reward = max(reward, -10.0)       
 
         self.steps += 1
         done = bool(

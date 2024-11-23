@@ -2,6 +2,7 @@ import numpy as np
 from inverted_pendulum_env import InvertedPendulumEnv
 from agents import PIDAgent
 
+DEBUG = True
 
 if __name__ == "__main__":
     env = InvertedPendulumEnv(
@@ -30,8 +31,8 @@ if __name__ == "__main__":
         action = agent.choose_action(obs_error)  # Replace with a trained policy for better control
         obs, reward, done, info = env.step(action)
         
-        # debug
-        print(_,action, obs, reward)
+        if DEBUG:
+            print(_, obs, np.round(reward,2), np.round(obs_error,2))
 
         if done:
             break
