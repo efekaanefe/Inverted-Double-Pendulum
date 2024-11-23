@@ -113,6 +113,7 @@ def run(window, width, height):
 
         clock.tick(FPS)
         pygame.display.update()
+        print(base_body.position.x, base_body.velocity.x, link_body.angle, link_body.angular_velocity)
     
     pygame.quit()
 

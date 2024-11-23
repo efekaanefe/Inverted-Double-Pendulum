@@ -106,7 +106,7 @@ class InvertedPendulumEnv(gym.Env):
         
          # Calculate reward
         base_center_dist = abs(x - (self.groove_length / 2)) / (self.groove_length / 2)
-        link_perpendicularity = 1 - (abs(theta) / self.max_angle)
+        link_perpendicularity = 1 - abs(theta - np.pi)/(2*np.pi)
         velocity_penalty = (abs(x_dot) + abs(theta_dot)) / 10.0
         
         reward = 1.0 * (1 - base_center_dist) + 1.0 * link_perpendicularity - 0.5 * velocity_penalty

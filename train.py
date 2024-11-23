@@ -2,10 +2,11 @@ import numpy as np
 from inverted_pendulum_env import InvertedPendulumEnv
 from agents import PIDAgent
 
+
 if __name__ == "__main__":
     env = InvertedPendulumEnv(
         gravity=150, 
-        dt=1/120.0, 
+        dt=1/30,
         force_mag=1000,                   
         base_size=(30, 30), 
         base_mass=5,
@@ -14,9 +15,9 @@ if __name__ == "__main__":
         groove_length = 600,
         max_angle=np.pi/3, 
         max_position=500,
-        max_steps = 100)
+        max_steps = 1000)
 
-    obs_goal = np.array([env.groove_length/2, 0, np.pi/2, 0])
+    obs_goal = np.array([env.groove_length/2, 0, np.pi, 0]) # x, xdot, theta, theta_dot
 
     obs = env.reset()
 
@@ -30,7 +31,7 @@ if __name__ == "__main__":
         obs, reward, done, info = env.step(action)
         
         # debug
-        print(_,done,action, obs)
+        print(_,action, obs, reward)
 
         if done:
             break
