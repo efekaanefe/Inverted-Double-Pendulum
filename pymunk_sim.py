@@ -87,7 +87,7 @@ def run(window, width, height):
     handler = space.add_collision_handler(base_collision_type, rotating_collision_type)
     handler.begin = lambda arbiter, space, data: False 
 
-    force_magnitude = 1500
+    force_magnitude = 2000
 
     ############################# MAINLOOP #############################
     while run:
