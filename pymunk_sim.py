@@ -68,7 +68,7 @@ def run(window, width, height):
     space.add(gear_joint)
 
     # pendulum link
-    link_size = (4, 100)
+    link_size = (4, 200)
     link_body, link_shape = create_rect_obj(
         space, 
         mass = 2, 
@@ -118,7 +118,6 @@ def run(window, width, height):
 
 
 if __name__ == "__main__":
-
     run(window, WIDTH, HEIGHT)
 
 
