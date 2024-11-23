@@ -6,44 +6,65 @@ import gym
 from gym import spaces
 import numpy as np
 
+import gym
+from gym import spaces
+import numpy as np
+import pymunk
 
 class InvertedPendulumEnv(gym.Env):
-    def __init__(self):
+    def __init__(self, 
+                 gravity=98.1, 
+                 dt=1/60.0, 
+                 force_mag=500, 
+                 base_size=(20, 20),
+                 base_mass=5, 
+                 link_size=(4, 200), 
+                 link_mass = 2,
+                 groove_length = 600,
+                 max_angle=np.pi/2,
+                 max_position=400):
+       
         super(InvertedPendulumEnv, self).__init__()
+        
+        # Store parameters
+        self.gravity = gravity
+        self.dt = dt
+        self.force_mag = force_mag
+        self.base_size = base_size
+        self.base_mass = base_mass
+        self.link_size = link_size
+        self.link_mass = link_mass
+        self.groove_length = groove_length
+        self.max_angle = max_angle
+        self.max_position = max_position
+
+        self.groove_y = 0
         
         # Pymunk space
         self.space = pymunk.Space()
-        self.space.gravity = (0, 98.1)
-        
-        # Environment constants
-        self.dt = 1/60.0  # Simulation timestep
-        self.force_mag = 500  # Magnitude of the applied force
-        self.max_angle = np.pi / 2  # Terminate if angle exceeds this
-        self.max_position = 400  # Terminate if base exceeds bounds
+        self.space.gravity = (0, self.gravity)
         
         # Create base
-        base_size = (20, 20)
         self.base_body, self.base_shape = self.create_rect_obj(
-            mass=5,
-            size=base_size,
-            pos=(400, 300),
+            mass=self.base_mass,
+            size=self.base_size,
+            pos=(self.groove_length/2, self.groove_y),
             color=(0, 102, 153, 255)
         )
         self.space.add(self.base_body, self.base_shape)
         
         # Create prismatic joint for base movement
         static_body = self.space.static_body
-        groove_start = (100, 300)
-        groove_end = (700, 300)
+        groove_start = (0, self.groove_y)
+        groove_end = (self.groove_length, self.groove_y)
         groove_joint = pymunk.GrooveJoint(static_body, self.base_body, groove_start, groove_end, (0, 0))
         self.space.add(groove_joint)
         
         # Create pendulum link
-        link_size = (4, 200)
         self.link_body, self.link_shape = self.create_rect_obj(
-            mass=2,
-            size=link_size,
-            pos=(400, 400),
+            mass=self.link_mass,
+            size=self.link_size,
+            pos=(self.groove_length/2, self.groove_y + self.link_size[1]/2),
             color=(255, 153, 51, 255)
         )
         self.space.add(self.link_body, self.link_shape)
@@ -92,6 +113,8 @@ class InvertedPendulumEnv(gym.Env):
             x < -self.max_position or x > self.max_position or
             abs(theta) > self.max_angle
         )
+
+        done = False
         
         # Reward is higher for keeping the pendulum upright and centered
         reward = 1.0 - (abs(theta) / self.max_angle)
@@ -123,14 +146,25 @@ class InvertedPendulumEnv(gym.Env):
     def close(self):
         pass  # Clean up resources if needed
 
+
 if __name__ == "__main__":
-    env = InvertedPendulumEnv()
+    env = InvertedPendulumEnv(
+        gravity=150, 
+        dt=1/120.0, 
+        force_mag=1000,                   
+        base_size=(30, 30), 
+        base_mass=5,
+        link_size=(6, 250), 
+        link_mass=2,
+        max_angle=np.pi/3, 
+        max_position=500)
+
     obs = env.reset()
 
     for _ in range(1000):
         action = env.action_space.sample()  # Replace with a trained policy for better control
         obs, reward, done, info = env.step(action)
+        print(action, obs)
         if done:
             break
     env.close()
-    
