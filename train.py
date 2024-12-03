@@ -29,9 +29,9 @@ if __name__ == "__main__":
     for _ in range(10000):
         obs_error = np.mean(obs_goal - obs)
 
-        # action = agent.choose_action(obs_error)  # Replace with a trained policy for better control
-        action = env.action_space.sample()
-        action = 1
+        action = agent.choose_action(obs_error)  # Replace with a trained policy for better control
+        # action = env.action_space.sample()
+        # action = 1
         obs, reward, done, info = env.step(action)
         
         if DEBUG:
