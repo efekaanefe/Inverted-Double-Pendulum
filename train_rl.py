@@ -1,6 +1,4 @@
-import numpy as np
 from inverted_pendulum_env import InvertedPendulumEnv
-from agents import PIDAgent
 
 from stable_baselines3 import PPO
 from stable_baselines3.common.env_checker import check_env
@@ -26,10 +24,11 @@ if __name__ == "__main__":
     # # Check the environment for compatibility
     # check_env(env)
 
-    # Define and train the model
+    # # Define and train the model
     model = PPO("MlpPolicy", env, verbose=1)
+    
     eval_callback = EvalCallback(env, best_model_save_path='./logs/',
-                                log_path='./logs/', eval_freq=100,
+                                log_path='./logs/', eval_freq=1000,
                                 deterministic=True, render=False)
 
     model.learn(total_timesteps=100000, callback=eval_callback)
@@ -37,7 +36,7 @@ if __name__ == "__main__":
     # Save the model
     model.save("ppo_inverted_pendulum")
 
-    # model.load("ppo_inverted_pendulum")
+    # model.load("logs//best_model")
     # # Test the trained agent
     # obs, _ = env.reset()
     # for _ in range(5000):

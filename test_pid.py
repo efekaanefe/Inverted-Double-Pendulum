@@ -15,7 +15,7 @@ if __name__ == "__main__":
         link_mass=1,
         groove_length = 600,
         initial_angle=270,
-        max_steps = 1500)
+        max_steps = 5000)
 
     obs_goal = np.array([env.groove_length/2, 0, 90, 0]) # x, xdot, theta, theta_dot
 

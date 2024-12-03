@@ -34,6 +34,8 @@ class InvertedPendulumEnv(gym.Env):
         self.initial_angle = initial_angle
         self.max_steps = max_steps
         self.render_mode = render_mode
+        
+        self.velocity_mag = 150
 
         self.groove_y = 0
 
@@ -54,7 +56,7 @@ class InvertedPendulumEnv(gym.Env):
         high = np.array([max_position, np.finfo(np.float32).max, max_angle, np.finfo(np.float32).max], dtype=np.float32)
         self.observation_space = spaces.Box(-high, high, dtype=np.float32)
         
-        # Action space: [-1, 0, 1] for left, no force, right
+        # Action space: [0, 1, 2] for left, no force, right
         self.action_space = spaces.Discrete(3)
 
     def create_pymunk_env(self):
@@ -120,9 +122,11 @@ class InvertedPendulumEnv(gym.Env):
     def step(self, action):
         # Apply force based on the action
         if action == 0:  # Left
-            self.base_body.apply_force_at_local_point((-self.force_mag, 0))
+            # self.base_body.apply_force_at_local_point((-self.force_mag, 0))
+            self.base_body.velocity = (-self.velocity_mag,0)
         elif action == 2:  # Right
-            self.base_body.apply_force_at_local_point((self.force_mag, 0))
+            # self.base_body.apply_force_at_local_point((self.force_mag, 0))
+            self.base_body.velocity = (self.velocity_mag, 0)
         
         # Step the simulation
         self.space.step(self.dt)
@@ -146,9 +150,11 @@ class InvertedPendulumEnv(gym.Env):
         # # Clip reward to avoid extreme values
         # reward = max(reward, -10.0)       
         
-        margin = 5; self.reward = -1
+        margin = 5; self.reward = 0
         if  90 - margin <= theta < 90 + margin:
             self.reward = 10
+        # if np.abs(theta_dot) > 2:
+            # self.reward -= 1
 
         self.steps += 1
         done = self.steps >= self.max_steps
@@ -184,9 +190,11 @@ class InvertedPendulumEnv(gym.Env):
             if keys[pygame.K_a]:
                 force_vector = (-self.force_mag, 0)
                 self.base_body.apply_force_at_local_point(force_vector, (0, 0))
+                self.base_body.velocity = (-self.velocity_mag, 0)
             elif keys[pygame.K_d]:
                 force_vector = (self.force_mag, 0)
                 self.base_body.apply_force_at_local_point(force_vector, (0, 0))
+                self.base_body.velocity = (self.velocity_mag, 0)
         
          # Offsets for centering the environment
         render_x = self.window_width / 2 - self.groove_length / 2
