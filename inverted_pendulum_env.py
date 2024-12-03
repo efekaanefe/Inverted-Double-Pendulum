@@ -38,7 +38,6 @@ class InvertedPendulumEnv(gym.Env):
         self.max_steps = max_steps
 
         self.groove_y = 0
-        self.steps = 0
 
         # Pygame setup
         self.screen = None
@@ -47,6 +46,18 @@ class InvertedPendulumEnv(gym.Env):
         self.window_height = 600
         self.render_scale = 1.0  # Scale for rendering
         
+        self.create_pymunk_env()
+        
+        # Observation space: [x, x_dot, theta, theta_dot]
+        high = np.array([self.max_position, np.finfo(np.float32).max, self.max_angle, np.finfo(np.float32).max], dtype=np.float32)
+        self.observation_space = spaces.Box(-high, high, dtype=np.float32)
+        
+        # Action space: [-1, 0, 1] for left, no force, right
+        self.action_space = spaces.Discrete(3)
+
+    def create_pymunk_env(self):
+        self.steps = 0
+
         # Pymunk space
         self.space = pymunk.Space()
         self.space.gravity = (0, self.gravity)
@@ -93,13 +104,6 @@ class InvertedPendulumEnv(gym.Env):
         # Collision handler
         handler = self.space.add_collision_handler(base_collision_type, rotating_collision_type)
         handler.begin = lambda arbiter, space, data: False
-        
-        # Observation space: [x, x_dot, theta, theta_dot]
-        high = np.array([self.max_position, np.finfo(np.float32).max, self.max_angle, np.finfo(np.float32).max], dtype=np.float32)
-        self.observation_space = spaces.Box(-high, high, dtype=np.float32)
-        
-        # Action space: [-1, 0, 1] for left, no force, right
-        self.action_space = spaces.Discrete(3)
 
     def create_rect_obj(self, mass, size, pos, color=(0, 102, 153, 255)):
         width, height = size
@@ -128,22 +132,22 @@ class InvertedPendulumEnv(gym.Env):
         
         obs = np.array([x, x_dot, theta, theta_dot], dtype=np.float32)
         
-         # Calculate reward
-        base_center_dist = abs(x - (self.groove_length / 2)) / (self.groove_length / 2)
-        link_perpendicularity = 1 - abs(theta - np.pi)/(2*np.pi)
-        velocity_penalty = (abs(x_dot) + abs(theta_dot)) / 10.0
-        
-        reward = (1.0 * (1 - base_center_dist) + 
-                1.0 * link_perpendicularity - 
-                0.5 * velocity_penalty)
-        
-        # Clip reward to avoid extreme values
+        #  # Calculate reward
+        # base_center_dist = abs(x - (self.groove_length / 2)) / (self.groove_length / 2)
+        # link_perpendicularity = 1 - abs(theta - np.pi)/(2*np.pi)
+        # velocity_penalty = (abs(x_dot) + abs(theta_dot)) / 10.0
+        # reward = (1.0 * (1 - base_center_dist) + 
+        #         1.0 * link_perpendicularity - 
+        #         0.5 * velocity_penalty)
+        # # Clip reward to avoid extreme values
         # reward = max(reward, -10.0)       
+        
+        margin = np.deg2rad(5); reward = 0
+        if  np.pi - margin <= theta < np.pi + margin:
+            reward = 1
 
         self.steps += 1
         done = bool(
-            # x < -self.max_position or x > self.max_position or
-            # abs(theta) > self.max_angle or
             self.steps >= self.max_steps
         )
         
@@ -151,12 +155,7 @@ class InvertedPendulumEnv(gym.Env):
 
     def reset(self):
         # Reset positions and velocities
-        self.base_body.position = (self.groove_length/2, self.groove_y)
-        self.base_body.velocity = (0, 0)
-        self.link_body.position = (self.groove_length/2, self.groove_y - self.link_size[1]/2)
-        # self.link_body.angle = self.initial_angle
-        self.link_body.angular_velocity = 0
-        self.link_body.velocity = (0, 0)
+        self.create_pymunk_env()
         
         # Return initial observation
         x = self.base_body.position.x
@@ -167,7 +166,6 @@ class InvertedPendulumEnv(gym.Env):
         return np.array([x, x_dot, theta, theta_dot], dtype=np.float32)
 
     def render(self, mode="human"):
-
         if self.screen is None:
             pygame.init()
             self.screen = pygame.display.set_mode((self.window_width, self.window_height))
@@ -177,7 +175,6 @@ class InvertedPendulumEnv(gym.Env):
         # keyboard handler
         for event in pygame.event.get():
             if event.type == pygame.QUIT :
-                run = False
                 break
 
             keys = pygame.key.get_pressed()

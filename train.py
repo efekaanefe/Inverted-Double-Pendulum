@@ -6,8 +6,8 @@ DEBUG = True
 
 if __name__ == "__main__":
     env = InvertedPendulumEnv(
-        gravity=-98.1, 
-        dt=1/60,
+        gravity=-98.1*2, 
+        dt=1/75,
         force_mag=1500,                   
         base_size=(30, 30), 
         base_mass=5,
@@ -17,7 +17,7 @@ if __name__ == "__main__":
         initial_angle=np.pi,
         max_angle=np.pi/3, 
         max_position=500,
-        max_steps = 10000)
+        max_steps = 200)
 
     obs_goal = np.array([env.groove_length/2, 0, np.pi, 0]) # x, xdot, theta, theta_dot
 
@@ -26,12 +26,12 @@ if __name__ == "__main__":
     P, I, D = 15, 5, 100 
     agent = PIDAgent(P, I, D)
 
-    for _ in range(10000):
+    for _ in range(1000):
         obs_error = np.mean(obs_goal - obs)
 
         action = agent.choose_action(obs_error)  # Replace with a trained policy for better control
         # action = env.action_space.sample()
-        # action = 1
+        action = 0
         obs, reward, done, info = env.step(action)
         
         if DEBUG:
@@ -39,7 +39,6 @@ if __name__ == "__main__":
 
         env.render()
         if done:
-            break
-
+            obs = env.reset()
 
     env.close()
