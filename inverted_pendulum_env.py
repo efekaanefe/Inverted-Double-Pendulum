@@ -1,5 +1,5 @@
-import gym
-from gym import spaces
+import gymnasium as gym
+from gymnasium  import spaces
 import numpy as np
 import pymunk
 import pymunk.pygame_util
@@ -16,12 +16,11 @@ class InvertedPendulumEnv(gym.Env):
                  link_size=(4, 200), 
                  link_mass = 2,
                  groove_length = 600,
-                 initial_angle=0,
-                 max_angle=np.pi/2,
-                 max_position=400,
-                 max_steps = 1000):
+                 initial_angle=270,
+                 max_steps = 1000,
+                 render_mode="human"):
        
-        super(InvertedPendulumEnv, self).__init__()
+        super().__init__()
         
         # Store parameters
         self.gravity = gravity
@@ -33,9 +32,8 @@ class InvertedPendulumEnv(gym.Env):
         self.link_mass = link_mass
         self.groove_length = groove_length
         self.initial_angle = initial_angle
-        self.max_angle = max_angle
-        self.max_position = max_position
         self.max_steps = max_steps
+        self.render_mode = render_mode
 
         self.groove_y = 0
 
@@ -48,8 +46,12 @@ class InvertedPendulumEnv(gym.Env):
         
         self.create_pymunk_env()
         
+        max_angle=360
+        max_position=self.groove_length
+
+        print(max_position, max_angle, np.finfo(np.float32).max)
         # Observation space: [x, x_dot, theta, theta_dot]
-        high = np.array([self.max_position, np.finfo(np.float32).max, self.max_angle, np.finfo(np.float32).max], dtype=np.float32)
+        high = np.array([max_position, np.finfo(np.float32).max, max_angle, np.finfo(np.float32).max], dtype=np.float32)
         self.observation_space = spaces.Box(-high, high, dtype=np.float32)
         
         # Action space: [-1, 0, 1] for left, no force, right
@@ -57,6 +59,7 @@ class InvertedPendulumEnv(gym.Env):
 
     def create_pymunk_env(self):
         self.steps = 0
+        self.reward = 0
 
         # Pymunk space
         self.space = pymunk.Space()
@@ -127,7 +130,8 @@ class InvertedPendulumEnv(gym.Env):
         # Get observations
         x = self.base_body.position.x
         x_dot = self.base_body.velocity.x
-        theta = self.link_body.angle
+        # theta = self.link_body.angle
+        theta = np.rad2deg(np.mod(self.link_body.angle + np.deg2rad(270), 2 * np.pi))
         theta_dot = self.link_body.angular_velocity
         
         obs = np.array([x, x_dot, theta, theta_dot], dtype=np.float32)
@@ -137,35 +141,34 @@ class InvertedPendulumEnv(gym.Env):
         # link_perpendicularity = 1 - abs(theta - np.pi)/(2*np.pi)
         # velocity_penalty = (abs(x_dot) + abs(theta_dot)) / 10.0
         # reward = (1.0 * (1 - base_center_dist) + 
-        #         1.0 * link_perpendicularity - 
-        #         0.5 * velocity_penalty)
+        #         10 * link_perpendicularity - 
+        #         0.0 * velocity_penalty)
         # # Clip reward to avoid extreme values
         # reward = max(reward, -10.0)       
         
-        margin = np.deg2rad(5); reward = 0
-        if  np.pi - margin <= theta < np.pi + margin:
-            reward = 1
+        margin = 5; self.reward = -1
+        if  90 - margin <= theta < 90 + margin:
+            self.reward = 10
 
         self.steps += 1
-        done = bool(
-            self.steps >= self.max_steps
-        )
+        done = self.steps >= self.max_steps
         
-        return obs, reward, done, {}
+        return obs, self.reward, done, False, {}
 
-    def reset(self):
+    def reset(self, seed = None):
         # Reset positions and velocities
+        super().reset(seed=seed)
+
         self.create_pymunk_env()
-        
         # Return initial observation
         x = self.base_body.position.x
         x_dot = self.base_body.velocity.x
         theta = self.link_body.angle
         theta_dot = self.link_body.angular_velocity
         
-        return np.array([x, x_dot, theta, theta_dot], dtype=np.float32)
+        return np.array([x, x_dot, theta, theta_dot], dtype=np.float32), {}
 
-    def render(self, mode="human"):
+    def render(self):
         if self.screen is None:
             pygame.init()
             self.screen = pygame.display.set_mode((self.window_width, self.window_height))
