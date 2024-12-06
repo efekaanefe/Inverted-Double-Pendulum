@@ -10,7 +10,7 @@ DEBUG = True
 if __name__ == "__main__":
     env = InvertedPendulumEnv(
         gravity=-98.1*2, 
-        dt=1/75,
+        dt=1/30,
         force_mag=1500*3,                   
         base_size=(30, 30), 
         base_mass=5,
@@ -29,7 +29,7 @@ if __name__ == "__main__":
     
     eval_callback = EvalCallback(env, best_model_save_path='./logs/',
                                 log_path='./logs/', eval_freq=1000,
-                                deterministic=True, render=True)
+                                deterministic=True, render=False)
 
     model.learn(total_timesteps=100000, callback=eval_callback)
 

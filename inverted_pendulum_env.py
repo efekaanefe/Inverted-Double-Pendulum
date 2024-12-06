@@ -10,7 +10,6 @@ class InvertedPendulumEnv(gym.Env):
     def __init__(self, 
                  gravity=98.1, 
                  dt=1/60.0, 
-                 force_mag=500, 
                  base_size=(20, 20),
                  base_mass=5, 
                  link_size=(4, 200), 
@@ -18,14 +17,14 @@ class InvertedPendulumEnv(gym.Env):
                  groove_length = 600,
                  initial_angle=270,
                  max_steps = 1000,
-                 render_mode="human"):
+                 render_mode="human",
+                 actuation_max = 300):
        
         super().__init__()
         
         # Store parameters
         self.gravity = gravity
         self.dt = dt
-        self.force_mag = force_mag
         self.base_size = base_size
         self.base_mass = base_mass
         self.link_size = link_size
@@ -35,8 +34,7 @@ class InvertedPendulumEnv(gym.Env):
         self.max_steps = max_steps
         self.render_mode = render_mode
         
-        self.velocity_mag = 150
-        self.velocity_max = 300
+        self.actuation_max = actuation_max
 
         self.groove_y = 0
 
@@ -57,9 +55,7 @@ class InvertedPendulumEnv(gym.Env):
         high = np.array([max_position, np.finfo(np.float32).max, max_angle, np.finfo(np.float32).max], dtype=np.float32)
         self.observation_space = spaces.Box(-high, high, dtype=np.float32)
         
-        # Action space: [0, 1, 2] for left, no force, right
-        # self.action_space = spaces.Discrete(3) # for force action
-        self.action_space = spaces.Discrete(self.velocity_max*2+1) # for velocity action
+        self.action_space = spaces.Discrete(self.actuation_max*2+1) # force or speed applied to the base
 
     def create_pymunk_env(self):
         self.steps = 0
@@ -122,18 +118,24 @@ class InvertedPendulumEnv(gym.Env):
         return body, shape
 
     def step(self, action):
+        if self.screen is None:
+            pygame.init()
+            self.screen = pygame.display.set_mode((self.window_width, self.window_height))
+            pygame.display.set_caption("Inverted Pendulum")
+            self.clock = pygame.time.Clock()
 
-        # # Apply force based on the action
-        # if action == 0:  # Left
-        #     # self.base_body.apply_force_at_local_point((-self.force_mag, 0))
-        #     self.base_body.velocity = (-self.velocity_mag,0)
-        # elif action == 2:  # Right
-        #     # self.base_body.apply_force_at_local_point((self.force_mag, 0))
-        #     self.base_body.velocity = (self.velocity_mag, 0)
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+        center_x = self.window_width // 2
+        if mouse_x == center_x:
+            speed = 0
+        elif mouse_x > center_x:
+            speed = self.actuation_max * (mouse_x - center_x) / (self.window_width // 2)
+        else:
+            speed = -self.actuation_max * (center_x - mouse_x) / (self.window_width // 2)        
+        if 0 < self.base_body.position.x < self.groove_length:
+            force = speed
+            self.base_body.apply_force_at_local_point((force,0))
         
-        speed = action - self.velocity_max
-        self.base_body.velocity = (speed, 0)
-
         # Step the simulation
         self.space.step(self.dt)
         
@@ -159,13 +161,13 @@ class InvertedPendulumEnv(gym.Env):
         margin = 5; self.reward = 0
         if  90 - margin <= theta < 90 + margin:
             self.reward = 10
-        # if np.abs(theta_dot) > 2:
-            # self.reward -= 1
+        # TODO: divide by theta_dot
+        # TODO: add centering effect
 
         self.steps += 1
         done = self.steps >= self.max_steps
         
-        return obs, self.reward, done, False, {}
+        return obs, self.reward, done, False, {} # add info for easier print
 
     def reset(self, seed = None):
         # Reset positions and velocities
@@ -192,16 +194,19 @@ class InvertedPendulumEnv(gym.Env):
             if event.type == pygame.QUIT :
                 break
 
-            keys = pygame.key.get_pressed()
-            if keys[pygame.K_a]:
-                force_vector = (-self.force_mag, 0)
-                self.base_body.apply_force_at_local_point(force_vector, (0, 0))
-                self.base_body.velocity = (-self.velocity_mag, 0)
-            elif keys[pygame.K_d]:
-                force_vector = (self.force_mag, 0)
-                self.base_body.apply_force_at_local_point(force_vector, (0, 0))
-                self.base_body.velocity = (self.velocity_mag, 0)
-        
+ #        mouse_x, mouse_y = pygame.mouse.get_pos()
+ #        center_x = self.window_width // 2
+ #        if mouse_x == center_x:
+ #            speed = 0
+ #        elif mouse_x > center_x:
+ #            speed = self.actuation_max * (mouse_x - center_x) / (self.window_width // 2)
+ #        else:
+            # speed = -self.actuation_max * (center_x - mouse_x) / (self.window_width // 2)        
+ #        if 0 < self.base_body.position.x < self.groove_length:
+ #            force = speed
+ #            self.base_body.apply_force_at_local_point((force,0))
+ #        self.space.step(self.dt)
+
          # Offsets for centering the environment
         render_x = self.window_width / 2 - self.groove_length / 2
         render_y = self.window_height / 2
