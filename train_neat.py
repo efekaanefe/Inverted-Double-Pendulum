@@ -6,7 +6,7 @@ from inverted_pendulum_env import InvertedPendulumEnv
 # visualize.draw_net(config, winner)
 # visualize.plot_stats(stats)
 # visualize.plot_species(stats)
-#
+
 def evaluate_genome(genome, config):
     # Create the neural network for this genome
     net = neat.nn.FeedForwardNetwork.create(genome, config)

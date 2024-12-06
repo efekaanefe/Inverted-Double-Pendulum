@@ -36,6 +36,7 @@ class InvertedPendulumEnv(gym.Env):
         self.render_mode = render_mode
         
         self.velocity_mag = 150
+        self.velocity_max = 300
 
         self.groove_y = 0
 
@@ -57,7 +58,8 @@ class InvertedPendulumEnv(gym.Env):
         self.observation_space = spaces.Box(-high, high, dtype=np.float32)
         
         # Action space: [0, 1, 2] for left, no force, right
-        self.action_space = spaces.Discrete(3)
+        # self.action_space = spaces.Discrete(3) # for force action
+        self.action_space = spaces.Discrete(self.velocity_max*2+1) # for velocity action
 
     def create_pymunk_env(self):
         self.steps = 0
@@ -120,14 +122,18 @@ class InvertedPendulumEnv(gym.Env):
         return body, shape
 
     def step(self, action):
-        # Apply force based on the action
-        if action == 0:  # Left
-            # self.base_body.apply_force_at_local_point((-self.force_mag, 0))
-            self.base_body.velocity = (-self.velocity_mag,0)
-        elif action == 2:  # Right
-            # self.base_body.apply_force_at_local_point((self.force_mag, 0))
-            self.base_body.velocity = (self.velocity_mag, 0)
+
+        # # Apply force based on the action
+        # if action == 0:  # Left
+        #     # self.base_body.apply_force_at_local_point((-self.force_mag, 0))
+        #     self.base_body.velocity = (-self.velocity_mag,0)
+        # elif action == 2:  # Right
+        #     # self.base_body.apply_force_at_local_point((self.force_mag, 0))
+        #     self.base_body.velocity = (self.velocity_mag, 0)
         
+        speed = action - self.velocity_max
+        self.base_body.velocity = (speed, 0)
+
         # Step the simulation
         self.space.step(self.dt)
         

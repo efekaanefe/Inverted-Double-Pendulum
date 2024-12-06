@@ -29,7 +29,7 @@ if __name__ == "__main__":
     
     eval_callback = EvalCallback(env, best_model_save_path='./logs/',
                                 log_path='./logs/', eval_freq=1000,
-                                deterministic=True, render=False)
+                                deterministic=True, render=True)
 
     model.learn(total_timesteps=100000, callback=eval_callback)
 

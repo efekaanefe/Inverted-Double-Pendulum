@@ -21,7 +21,6 @@ if __name__ == "__main__":
         max_steps = 1500,
         render_mode="human")
 
-
     # Define and train the model
     model = PPO("MlpPolicy", env, verbose=1)
     model.load("logs//best_model")
