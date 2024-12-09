@@ -1,21 +1,25 @@
 import numpy as np
 from inverted_pendulum_env import InvertedPendulumEnv
 
-DEBUG = False
+DEBUG = True
 
 if __name__ == "__main__":
 
     env = InvertedPendulumEnv(
-        gravity=-98.1*3, 
+        gravity=-9.81*10*10, 
         dt=1/75,
         base_size=(30, 30), 
         base_mass=5,
-        link_size=(4, 300), 
-        link_mass=1,
-        groove_length = 600,
+        link_size=(5, 400), 
+        link_mass=0.5,
+        groove_length = 1500,
         initial_angle=270,
         max_steps = 5000,
-        actuation_max=2000) # force or speed
+        actuation_max=10000,
+        render_mode = "human",
+        input_mode = "human") # force or speed
+
+    env.render_scale = 0.5
 
     obs_goal = np.array([env.groove_length/2, 0, 90, 0]) # x, xdot, theta, theta_dot
 
@@ -33,14 +37,14 @@ if __name__ == "__main__":
         if DEBUG:
             print(
                 iter,
-                # action, 
-                # obs,
-                np.round(reward,2),
-                total_reward,
+                #action, 
+                obs[3],
+                #np.round(reward,2),
+                #total_reward,
                 # np.round(obs_error,2)
                 )
 
-        env.render()
+        env.render(manual_test = True)
         if done:
             obs = env.reset()
 

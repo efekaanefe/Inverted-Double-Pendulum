@@ -25,17 +25,18 @@ def visualize_best_model():
 
     dt = 1 / 75
     env = InvertedPendulumEnv(
-            gravity=-98.1*3, 
+            gravity=-9.81*10*10, 
             dt=dt,
             base_size=(30, 30), 
             base_mass=5,
             link_size=(4, 300), 
             link_mass=1,
-            groove_length = 600,
+            groove_length = 1500,
             initial_angle=270,
-            max_steps = int(10 / dt),
-            actuation_max=2000, # force or speed
-            render_mode = "human"
+            max_steps = 50 // dt,
+            actuation_max=1000, # force or speed
+            render_mode = "human",
+            input_mode = "agent"
             ) 
 
     obs,_  = env.reset()
