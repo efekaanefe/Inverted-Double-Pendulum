@@ -1,23 +1,27 @@
 import numpy as np
 from inverted_pendulum_env import InvertedPendulumEnv
+from constants import *
+
 
 DEBUG = True
 
 if __name__ == "__main__":
 
     env = InvertedPendulumEnv(
-        gravity=-9.81*10*10, 
-        dt=1/75,
-        base_size=(30, 30), 
-        base_mass=5,
-        link_size=(5, 400), 
-        link_mass=0.5,
-        groove_length = 1500,
-        initial_angle=270,
-        max_steps = 5000,
-        actuation_max=10000,
-        render_mode = "human",
-        input_mode = "human") # force or speed
+            gravity=gravity, 
+            dt=dt,
+            base_size=base_size, 
+            base_mass=base_mass,
+            link_size=link_size, 
+            link_mass=link_mass,
+            groove_length = groove_length,
+            initial_angle=initial_angle,
+            max_steps = max_steps * 3,
+            actuation_max=actuation_max, # force or speed
+            margin = margin,
+            render_mode = "human",
+            input_mode = "human"
+            ) 
 
     env.render_scale = 0.5
 

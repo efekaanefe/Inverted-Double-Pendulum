@@ -140,18 +140,16 @@ class InvertedPendulumEnv(gym.Env):
             else:
                 speed = -self.actuation_max * (center_x - mouse_x) / (self.window_width // 2)        
             if 0 < self.base_body.position.x < self.groove_length: # while inside the groove, 
-                force = speed
                 self.base_body.apply_force_at_local_point((force,0))
                 #self.base_body.velocity = (speed, 0)
                 #print(speed)
 
         elif self.input_mode == "agent":
-            force = -self.actuation_max + action
-            #force = action
+            #force = -self.actuation_max + action
+            force = action # for test_neat_pid testing, this is wrong
             self.base_body.apply_force_at_local_point((force,0))
             #speed = action
             #self.base_body.velocity = (speed,0)
-
         # Step the simulation
         self.space.step(self.dt)
         
@@ -180,17 +178,17 @@ class InvertedPendulumEnv(gym.Env):
         reward = 0
 
         # Penalize high angular velocity
-        if np.abs(theta_dot) > 3: reward += rewards["theta_dot"]
+        if np.abs(theta_dot) > 2: reward += rewards["theta_dot"]
         else:
-            #if np.abs(x_dot)<200:
-            if 90 - self.margin <= theta <= 90 + self.margin:
-                target_x = self.groove_length / 2  
-                position_deviation = np.abs(x - target_x) / (self.groove_length / 2)  # Normalize deviation
-                if position_deviation < 0.3:
-                    self.consecutive_success_count += 0.5
-                    reward += rewards["theta"] + self.consecutive_success_count
-            else:
-                self.consecutive_success_count = 0
+            if np.abs(x_dot)<200:
+                if 90 - self.margin <= theta <= 90 + self.margin:
+                    target_x = self.groove_length / 2  
+                    position_deviation = np.abs(x - target_x) / (self.groove_length / 2)  # Normalize deviation
+                    if position_deviation < 0.3:
+                        self.consecutive_success_count += 0.5
+                        reward += rewards["theta"] + self.consecutive_success_count
+                else:
+                    self.consecutive_success_count = 0
 
         self.reward = (reward * self.dt) * 10
 
