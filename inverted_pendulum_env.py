@@ -123,6 +123,7 @@ class InvertedPendulumEnv(gym.Env):
         return body, shape
 
     def step(self, action):
+        info = {}
         if self.render_mode == "human":
             if self.screen is None:
                 pygame.init()
@@ -142,6 +143,7 @@ class InvertedPendulumEnv(gym.Env):
             if 0 < self.base_body.position.x < self.groove_length: # while inside the groove, 
                 force = speed
                 self.base_body.apply_force_at_local_point((force,0))
+                info["force"] = force
                 #self.base_body.velocity = (speed, 0)
                 #print(speed)
 
@@ -230,11 +232,12 @@ class InvertedPendulumEnv(gym.Env):
         self.steps += 1
         done = self.steps >= self.max_steps
         
-        return obs, self.reward, done, False, {} # add info for easier print
+        return obs, self.reward, done, False, info # add info for easier print
 
     def reset(self, seed = None):
         # Reset positions and velocities
         super().reset(seed=seed)
+        self.steps = 0
 
         self.create_pymunk_env()
         # Return initial observation
