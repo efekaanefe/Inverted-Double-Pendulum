@@ -21,6 +21,7 @@ class InvertedPendulumEnv(gym.Env):
                  margin = 1,
                  render_mode="human",
                  input_mode = "agent",
+                 control_type = "swing-up"
 
                  ):
        
@@ -38,6 +39,7 @@ class InvertedPendulumEnv(gym.Env):
         self.max_steps = max_steps
         self.render_mode = render_mode
         self.input_mode = input_mode
+        self.control_type = control_type
         
         self.actuation_max = actuation_max
         self.margin = margin # for reward
@@ -92,12 +94,18 @@ class InvertedPendulumEnv(gym.Env):
         self.space.add(groove_joint)
         
         # Create pendulum link
+        if self.control_type == "swing-up":
+            pos = (self.groove_length/2, self.groove_y - self.link_size[1]/2)
+        elif self.control_type == "stabilization":
+            pos = (self.groove_length/2, self.groove_y + self.link_size[1]/2)
+
         self.link_body, self.link_shape = self.create_rect_obj(
             mass=self.link_mass,
             size=self.link_size,
-            pos=(self.groove_length/2, self.groove_y - self.link_size[1]/2),
+            pos=pos,
             color=(255, 153, 51, 255)
         )
+
         # self.link_body.angle = self.initial_angle
 
         self.link_shape.collision_type = rotating_collision_type
@@ -148,9 +156,10 @@ class InvertedPendulumEnv(gym.Env):
                 #print(speed)
 
         elif self.input_mode == "agent":
-            force = -self.actuation_max + action
-            #force = action
+            # force = -self.actuation_max + action
+            force = action
             self.base_body.apply_force_at_local_point((force,0))
+
             #speed = action
             #self.base_body.velocity = (speed,0)
 
@@ -162,7 +171,11 @@ class InvertedPendulumEnv(gym.Env):
         x = self.base_body.position.x #/ self.max_position
         x_dot = self.base_body.velocity.x
         # theta = self.link_body.angle
-        theta = np.rad2deg(np.mod(self.link_body.angle + np.deg2rad(270), 2 * np.pi)) #/ 360
+        if self.control_type == "swing-up":
+            theta = np.rad2deg(np.mod(self.link_body.angle + np.deg2rad(270), 2 * np.pi)) #/ 360
+        elif self.control_type == "stabilization":
+            theta = np.rad2deg(np.mod(self.link_body.angle + np.deg2rad(90), 2 * np.pi)) #/ 360
+
         theta_dot = self.link_body.angular_velocity
         
         obs = np.array([x, x_dot, theta, theta_dot], dtype=np.float32)
