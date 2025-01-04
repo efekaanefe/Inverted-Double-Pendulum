@@ -1,9 +1,9 @@
 
-gravity=-9.81*100
+gravity=+9.81*100
 dt = 1 / 200
 base_size=(30, 30)
-base_mass=1
-link_size=(4, 200)
+base_mass=2
+link_size=(4, 250)
 link_mass=0.1
 groove_length = 1500
 max_steps = 10 // dt

@@ -62,7 +62,7 @@ class LQRAgent:
         action = -self.K @ state
 
         # Clamp the action within specified limits
-        max_limit = 255; min_limit = -max_limit
+        max_limit = 255*1; min_limit = -max_limit
         # action = np.clip(action, min_limit, max_limit)
 
         return action

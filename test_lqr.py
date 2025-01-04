@@ -5,7 +5,7 @@ from agents import LQRAgent
 import pymunk
 
 DEBUG = True
-dt = 1/100
+dt = 1/200
 
 if __name__ == "__main__":
     env = InvertedPendulumEnv(
@@ -29,33 +29,36 @@ if __name__ == "__main__":
         # Extract environment variables
         m1 = env.base_mass  # Base (cart) mass
         m2 = env.link_mass  # Pendulum mass
-        g = env.gravity  # Gravity
-        l = env.link_size[1] / 2  # Link half-length
-        base_size = env.base_size  # Base dimensions (w, h)
-        link_size = env.link_size  # Link dimensions (w, h)
+        g = env.gravity     # Gravity
+        l = env.link_size[1]  # Link half-length
+        # base_size = env.base_size  # Base dimensions (w, h)
+        # link_size = env.link_size  # Link dimensions (w, h)
 
-        # Calculate moments of inertia using pymunk
-        I_link = pymunk.moment_for_box(m2, link_size)  # Moment of inertia for pendulum
-        denom = I_link + m2 * (l**2)  # Effective denominator for linearization
-
+        g /= 100
+        l /= 1000
+        # link_size = (link_size[0]/scale, link_size[1]/scale) 
+        
         # State-space matrices
+        denom1 = (4*m1 + m2)
+        denom2 = l * (4*m1 + m2)
+        
         A = np.array([
             [0, 1, 0, 0],
-            [0, 0, -(m2 * g * l) / denom, 0],
+            [0, 0, -(3*m2*g)/denom1, 0],
             [0, 0, 0, 1],
-            [0, 0, g * (m1 + m2) / denom, 0]
-        ])
-        
-        B = np.array([
-            [0],
-            [1 / denom],
-            [0],
-            [-l / denom]
+            [0, 0, 3*g*(m1 + m2)/denom2, 0]
         ])
 
+        B = np.array([
+            [0],
+            [4 / denom1],
+            [0],
+            [-3 / denom2]
+        ])
+        
         # Define Q and R matrices
-        Q = np.diag([10, 1, 10000, 1])  # Penalize x, x_dot, theta, theta_dot
-        R = np.diag([0.1])           # Penalize control effort
+        Q = np.diag([100, 1, 10, 1])/1 # Penalize x, x_dot, theta, theta_dot
+        R = np.diag([0.01])           # Penalize control effort
 
         return A, B, Q, R
 
@@ -63,11 +66,18 @@ if __name__ == "__main__":
     
     lqr_agent = LQRAgent(A, B, Q, R)
 
+    print(lqr_agent.A)
+    print(lqr_agent.B)
+    print(lqr_agent.Q)
+    print(lqr_agent.R)
+    print(lqr_agent.K)
+
     obs_goal = np.array([env.groove_length/2, 0, 90, 0]) # x, xdot, theta, theta_dot
     obs, _ = env.reset()
     total_reward = 0
-    
+
     env.base_body.apply_force_at_local_point((env.actuation_max*25, 0)) # initial push to the right
+    env.link_body.apply_force_at_local_point((env.actuation_max*25, 0)) # initial push to the right
 
     for iter in range(int(max_steps * 100)):
         try:
@@ -77,16 +87,25 @@ if __name__ == "__main__":
 
         # disturbance
         if np.random.uniform(0, 1) < 0.00:
-            force = np.random.uniform(-env.actuation_max, env.actuation_max)
-            force = env.actuation_max*10
-            env.base_body.apply_force_at_local_point((force,0))
+            force = np.random.uniform(-env.actuation_max, env.actuation_max) * 5
+            # mag = 20
+            # force = env.actuation_max*np.random.choice([-mag, mag])
+            env.link_body.apply_force_at_local_point((force,0))
 
             print(f"Disturbance: {force}")
         
         error = obs_goal - obs
 
+        scale = 1
+        error[0] /= scale 
+        # error[1] /= scale 
+        # error[2] = np.deg2rad(error[2])
+        # error[3] = np.deg2rad(error[3])
+
         action = 0
         action += lqr_agent.choose_action(error) 
+        
+        # action /= 100
 
         obs, reward, done, _, info = env.step(action)
         total_reward += reward
@@ -95,12 +114,9 @@ if __name__ == "__main__":
             print(
                 # iter,
                 action, 
-                # obs[2],
-                # obs[0],
-                error,
-                #np.round(reward,2),
+                obs,
+                # error,
                 #total_reward,
-                # np.round(obs_error,2)
                 )
 
         env.render(manual_test = True)
