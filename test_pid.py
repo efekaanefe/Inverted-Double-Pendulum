@@ -27,10 +27,6 @@ if __name__ == "__main__":
     pid_theta = PIDAgent(P=100, I=0, D=50)
     pid_x = PIDAgent(P=10, I=0, D=0)
 
-    # pid_theta = PIDAgent(P=18.27, I=13.91, D=3.224)
-    # pid_x = PIDAgent(P=52.35, I=102.93, D=10)
-
-
     obs_goal = np.array([env.groove_length/2, 0, 90, 0]) # x, xdot, theta, theta_dot
 
     obs, _ = env.reset()
