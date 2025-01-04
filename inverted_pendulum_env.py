@@ -154,8 +154,8 @@ class InvertedPendulumEnv(gym.Env):
                 #print(speed)
 
         elif self.input_mode == "agent":
-            force = -self.actuation_max + action # use this for neat or rl
-            # force = action                     # use this for pid
+            # force = -self.actuation_max + action # use this for neat or rl
+            force = action                     # use this for pid
             self.base_body.apply_force_at_local_point((force,0))
 
             #speed = action
@@ -188,24 +188,28 @@ class InvertedPendulumEnv(gym.Env):
 
         rewards = {
             "theta_dot":-0.2, # Reward for small theta_dot
-            "theta":10,        # Reward for being close to the target angle
+            "theta":2,        # Reward for being close to the target angle
         }
         reward = 0
+        
+        if 90 - self.margin <= theta <= 90 + self.margin:
+            reward = 1
+        
+        #
+        # # Penalize high angular velocity
+        # if np.abs(theta_dot) > 10000: reward += rewards["theta_dot"]
+        # else:
+        #     #if np.abs(x_dot)<200:
+        #     if 90 - self.margin <= theta <= 90 + self.margin:
+        #         target_x = self.groove_length / 2  
+        #         position_deviation = np.abs(x - target_x) / (self.groove_length / 2)  # Normalize deviation
+        #         if position_deviation < 0.8:
+        #             self.consecutive_success_count += 0.5
+        #             reward += rewards["theta"] + self.consecutive_success_count
+        #     else:
+        #         self.consecutive_success_count = 0
 
-        # Penalize high angular velocity
-        if np.abs(theta_dot) > 10: reward += rewards["theta_dot"]
-        else:
-            #if np.abs(x_dot)<200:
-            if 90 - self.margin <= theta <= 90 + self.margin:
-                target_x = self.groove_length / 2  
-                position_deviation = np.abs(x - target_x) / (self.groove_length / 2)  # Normalize deviation
-                if position_deviation < 0.8:
-                    self.consecutive_success_count += 0.5
-                    reward += rewards["theta"] + self.consecutive_success_count
-            else:
-                self.consecutive_success_count = 0
-
-        self.reward = (reward * self.dt) * 10
+        self.reward = (reward * self.dt)
 
         # rewards = {
         #     "theta_dot": -0.1,  # Penalize high angular velocity

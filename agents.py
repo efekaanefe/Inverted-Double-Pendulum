@@ -8,9 +8,9 @@ class PIDAgent:
         self.prev_error = 0 # error for all the observations, shape -> (4,)
         self.integral = 0
 
-    def choose_action(self, error):
-        self.integral += error
-        derivative = error - self.prev_error
+    def choose_action(self, error, dt):
+        self.integral += error * dt
+        derivative = (error - self.prev_error)/dt
         self.prev_error = error
         action = self.p * error + self.i * self.integral + self.d * derivative
         # action = sigmoid(pid).astype(np.int16)

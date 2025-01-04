@@ -8,7 +8,9 @@ from concurrent.futures import ThreadPoolExecutor
 
 import visualize
 
-save_dir = "models/neat"
+control_type="stabilization"
+
+save_dir = f"models\\{control_type}\\neat"
 os.makedirs(save_dir, exist_ok=True)  # Ensure the directory exists
 
 def evaluate_genome(genome_config):
@@ -30,16 +32,24 @@ def evaluate_genome(genome_config):
         margin=margin,
         render_mode="agent",
         input_mode="agent",
+        control_type=control_type
     )
 
     obs, _ = env.reset()
     total_reward = 0
     done = False
 
+    env.base_body.apply_force_at_local_point((env.actuation_max,0))
+
     while not done:
-        action = net.activate(obs)[0]
-        scaled_action = action * env.actuation_max
-        obs, reward, done, _, info = env.step(scaled_action)
+
+        # disturbance
+        if np.random.uniform(0, 1) < 0.0:
+            force = np.random.uniform(-env.actuation_max, env.actuation_max)
+            env.base_body.apply_force_at_local_point((force,0))
+
+        action = net.activate(obs)[0] * env.actuation_max
+        obs, reward, done, _, info = env.step(action)
         total_reward += reward
 
     genome.fitness = total_reward
@@ -70,7 +80,7 @@ def run_neat(config_file):
     population.add_reporter(stats)
 
     # Run NEAT
-    winner = population.run(evaluate_genomes, n=50)  # Run for n generations
+    winner = population.run(evaluate_genomes, n=100)  # Run for n generations
     print("\nBest genome:\n", winner)
 
     save_path = os.path.join(save_dir, f"best_genome_{winner.fitness}.pkl")

@@ -1,12 +1,13 @@
 import neat
 import pickle
 import numpy as np
-import gym
 from inverted_pendulum_env import InvertedPendulumEnv 
 from constants import *
 
-
-GENOME_PATH = "models/neat/best_genome_667.pkl"
+# TODO: make control type reached from constants
+control_type = "stabilization"
+reward = 4.44
+GENOME_PATH = f"models\\{control_type}\\neat\\best_genome_{reward}.pkl"
 CONFIG_PATH = "config-feedforward.txt"
 
 def visualize_best_model():
@@ -33,24 +34,41 @@ def visualize_best_model():
             link_size=link_size, 
             link_mass=link_mass,
             groove_length = groove_length,
-            max_steps = max_steps * 1,
+            max_steps = max_steps,
             actuation_max=actuation_max, # force or speed
             margin = margin,
             render_mode = "human",
-            input_mode = "agent"
+            input_mode = "agent",
+            control_type = control_type
             ) 
 
     obs,_  = env.reset()
     total_reward = 0
     done = False
 
+    env.step(3000) # initial push to the right
+
     while not done:
         env.render()
 
+        # disturbance
+        if np.random.uniform(0, 1) < 0.0:
+            force = np.random.uniform(-env.actuation_max, env.actuation_max)
+            env.base_body.apply_force_at_local_point((force,0))
+
+            print(f"Disturbance: {force}")
+
         action = net.activate(obs)[0] * env.actuation_max  
 
-        obs, reward, done, info, _ = env.step(action)
+        obs, reward, done, _, info  = env.step(action)
         total_reward += reward
+        
+        print(
+            action,
+            net.activate(obs)[0] 
+            # -env.actuation_max + action,
+            # reward
+        )
 
     print(f"Total reward: {total_reward}")
     env.close()
