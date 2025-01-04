@@ -37,7 +37,8 @@ if __name__ == "__main__":
 
     total_reward = 0
     
-    env.base_body.apply_force_at_local_point((env.actuation_max*25, 0)) # initial push to the right
+    env.base_body.apply_force_at_local_point((env.actuation_max*15, 0)) # initial push to the right
+    env.link_body.apply_force_at_local_point((env.actuation_max*15, 0)) # initial push to the right
 
     for iter in range(int(max_steps * 100)):
         try:
