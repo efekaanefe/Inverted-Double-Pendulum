@@ -25,11 +25,10 @@ def evaluate_genome(genome_config):
         link_size=link_size,
         link_mass=link_mass,
         groove_length=groove_length,
-        initial_angle=initial_angle,
         max_steps=max_steps,
         actuation_max=actuation_max,
         margin=margin,
-        render_mode=None,
+        render_mode="agent",
         input_mode="agent",
     )
 
@@ -71,7 +70,7 @@ def run_neat(config_file):
     population.add_reporter(stats)
 
     # Run NEAT
-    winner = population.run(evaluate_genomes, n=500)  # Run for n generations
+    winner = population.run(evaluate_genomes, n=50)  # Run for n generations
     print("\nBest genome:\n", winner)
 
     save_path = os.path.join(save_dir, f"best_genome_{winner.fitness}.pkl")

@@ -7,7 +7,7 @@ link_size=(4, 300)
 link_mass=0.1
 groove_length = 1500
 initial_angle=270
-max_steps = 15 // dt
+max_steps = 10 // dt
 actuation_max=1000 # force or speed
 margin = 10
 

@@ -9,18 +9,22 @@ DEBUG = True
 
 if __name__ == "__main__":
     env = InvertedPendulumEnv(
-        gravity=-98.1*2, 
-        dt=1/30,
-        force_mag=1500*3,                   
-        base_size=(30, 30), 
-        base_mass=5,
-        link_size=(4, 250), 
-        link_mass=1,
-        groove_length = 600,
-        initial_angle=270,
-        max_steps = 1500,
-        render_mode="human")
-    
+        gravity=gravity, 
+        dt=dt,
+        base_size=base_size, 
+        base_mass=base_mass,
+        link_size=link_size, 
+        link_mass=link_mass,
+        groove_length = groove_length,
+        max_steps = max_steps,
+        actuation_max=255, # force or speed
+        margin = margin,
+        render_mode = "agent",
+        input_mode = "agent",
+        control_type = "stabilization"
+        ) 
+
+
     # # Check the environment for compatibility
     # check_env(env)
 
@@ -34,7 +38,7 @@ if __name__ == "__main__":
     model.learn(total_timesteps=100000, callback=eval_callback)
 
     # Save the model
-    model.save("ppo_inverted_pendulum")
+    model.save("models\\rl\\ppo_inverted_pendulum")
 
     # model.load("logs//best_model")
     # # Test the trained agent

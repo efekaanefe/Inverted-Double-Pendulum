@@ -33,7 +33,6 @@ def visualize_best_model():
             link_size=link_size, 
             link_mass=link_mass,
             groove_length = groove_length,
-            initial_angle=initial_angle,
             max_steps = max_steps * 1,
             actuation_max=actuation_max, # force or speed
             margin = margin,

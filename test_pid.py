@@ -14,7 +14,6 @@ if __name__ == "__main__":
             link_size=link_size, 
             link_mass=0.1,
             groove_length = groove_length,
-            initial_angle = initial_angle,
             max_steps = max_steps * 100,
             actuation_max=actuation_max, # force or speed
             margin = margin,
@@ -57,7 +56,7 @@ if __name__ == "__main__":
                 # obs[2],
                 # obs[0],
                 error_theta,
-                error_x,
+                error_x,actuation_max
                 #np.round(reward,2),
                 #total_reward,
                 # np.round(obs_error,2)

@@ -15,7 +15,6 @@ class InvertedPendulumEnv(gym.Env):
                  link_size=(4, 200), 
                  link_mass = 2,
                  groove_length = 600,
-                 initial_angle=270,
                  max_steps = 1000,
                  actuation_max = 300,
                  margin = 1,
@@ -35,7 +34,6 @@ class InvertedPendulumEnv(gym.Env):
         self.link_size = link_size
         self.link_mass = link_mass
         self.groove_length = groove_length
-        self.initial_angle = initial_angle
         self.max_steps = max_steps
         self.render_mode = render_mode
         self.input_mode = input_mode
@@ -156,8 +154,8 @@ class InvertedPendulumEnv(gym.Env):
                 #print(speed)
 
         elif self.input_mode == "agent":
-            # force = -self.actuation_max + action
-            force = action
+            force = -self.actuation_max + action # use this for neat or rl
+            # force = action                     # use this for pid
             self.base_body.apply_force_at_local_point((force,0))
 
             #speed = action
@@ -176,7 +174,7 @@ class InvertedPendulumEnv(gym.Env):
         elif self.control_type == "stabilization":
             theta = np.rad2deg(np.mod(self.link_body.angle + np.deg2rad(90), 2 * np.pi)) #/ 360
 
-        theta_dot = self.link_body.angular_velocity
+        theta_dot = np.deg2rad(self.link_body.angular_velocity) # deg/s
         
         obs = np.array([x, x_dot, theta, theta_dot], dtype=np.float32)
         
@@ -190,18 +188,18 @@ class InvertedPendulumEnv(gym.Env):
 
         rewards = {
             "theta_dot":-0.2, # Reward for small theta_dot
-            "theta":1,        # Reward for being close to the target angle
+            "theta":10,        # Reward for being close to the target angle
         }
         reward = 0
 
         # Penalize high angular velocity
-        if np.abs(theta_dot) > 3: reward += rewards["theta_dot"]
+        if np.abs(theta_dot) > 10: reward += rewards["theta_dot"]
         else:
             #if np.abs(x_dot)<200:
             if 90 - self.margin <= theta <= 90 + self.margin:
                 target_x = self.groove_length / 2  
                 position_deviation = np.abs(x - target_x) / (self.groove_length / 2)  # Normalize deviation
-                if position_deviation < 0.3:
+                if position_deviation < 0.8:
                     self.consecutive_success_count += 0.5
                     reward += rewards["theta"] + self.consecutive_success_count
             else:

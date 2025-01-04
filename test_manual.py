@@ -4,7 +4,7 @@ from constants import *
 
 
 DEBUG = True
-LOG = True
+LOG = False
 SAVE = False
 
 if __name__ == "__main__":
@@ -16,12 +16,13 @@ if __name__ == "__main__":
             link_size=link_size, 
             link_mass=link_mass,
             groove_length = groove_length,
-            initial_angle=initial_angle,
-            max_steps = max_steps * 6,
+            max_steps = max_steps * 10,
             actuation_max=actuation_max, # force or speed
             margin = margin,
             render_mode = "human",
-            input_mode = "human"
+            input_mode = "human",
+            # control_type="stabilization"
+            control_type="swing-up"
             ) 
 
     env.render_scale = 0.5
@@ -64,7 +65,7 @@ if __name__ == "__main__":
             print(
                 iter,
                 #action, 
-                obs[3],
+                obs[2],
                 #np.round(reward,2),
                 #total_reward,
                 # np.round(obs_error,2)
