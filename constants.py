@@ -1,10 +1,10 @@
 
-gravity=+9.81*100
+gravity=-9.81*100
 dt = 1 / 200
 base_size=(30, 30)
-base_mass=2
-link_size=(4, 250)
-link_mass=0.1
+base_mass=0.5
+link_size=(10, 300)
+link_mass=0.2
 groove_length = 1500
 max_steps = 10 // dt
 actuation_max=1000 # force or speed

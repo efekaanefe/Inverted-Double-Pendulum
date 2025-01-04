@@ -258,7 +258,11 @@ class InvertedPendulumEnv(gym.Env):
         # Return initial observation
         x = self.base_body.position.x
         x_dot = self.base_body.velocity.x
-        theta = self.link_body.angle
+        if self.control_type == "swing-up":
+            theta = np.rad2deg(np.mod(self.link_body.angle + np.deg2rad(270), 2 * np.pi)) #/ 360
+        elif self.control_type == "stabilization":
+            theta = np.rad2deg(np.mod(self.link_body.angle + np.deg2rad(90), 2 * np.pi)) #/ 360
+
         theta_dot = self.link_body.angular_velocity
         
         return np.array([x, x_dot, theta, theta_dot], dtype=np.float32), {}

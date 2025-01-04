@@ -33,8 +33,8 @@ if __name__ == "__main__":
 
     total_reward = 0
     
-    env.base_body.apply_force_at_local_point((env.actuation_max*15, 0)) # initial push to the right
-    env.link_body.apply_force_at_local_point((env.actuation_max*15, 0)) # initial push to the right
+    # env.base_body.apply_force_at_local_point((env.actuation_max*1, 0)) # initial push to the right
+    env.link_body.apply_force_at_local_point((env.actuation_max*1, 0)) # initial push to the right
 
     for iter in range(int(max_steps * 100)):
         try:
@@ -45,7 +45,7 @@ if __name__ == "__main__":
         # disturbance
         if np.random.uniform(0, 1) < 0.00:
             force = np.random.uniform(-env.actuation_max, env.actuation_max)
-            force = env.actuation_max*10
+            force = env.actuation_max
             env.base_body.apply_force_at_local_point((force,0))
 
             print(f"Disturbance: {force}")
@@ -63,11 +63,11 @@ if __name__ == "__main__":
         if DEBUG:
             print(
                 # iter,
-                action, 
-                # obs[2],
+                # action, 
+                obs[2],
                 # obs[0],
                 error_theta,
-                error_x,
+                # error_x,
                 #np.round(reward,2),
                 #total_reward,
                 # np.round(obs_error,2)
