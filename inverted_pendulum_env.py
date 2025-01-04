@@ -274,7 +274,7 @@ class InvertedPendulumEnv(gym.Env):
             # keyboard handler
             for event in pygame.event.get():
                 if event.type == pygame.QUIT :
-                    break
+                    self.steps = self.max_steps
 
      #        mouse_x, mouse_y = pygame.mouse.get_pos()
      #        center_x = self.window_width // 2

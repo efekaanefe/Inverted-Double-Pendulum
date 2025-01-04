@@ -1,7 +1,8 @@
 import numpy as np
 from inverted_pendulum_env import InvertedPendulumEnv
 from constants import *
-from agents import PIDAgent
+from agents import LQRAgent
+import pymunk
 
 DEBUG = True
 dt = 1/100
@@ -24,17 +25,46 @@ if __name__ == "__main__":
             # control_type="swing-up"
             ) 
 
-    pid_theta = PIDAgent(P=100, I=0, D=50)
-    pid_x = PIDAgent(P=10, I=0, D=0)
+    def compute_system_matrices(env):
+        # Extract environment variables
+        m1 = env.base_mass  # Base (cart) mass
+        m2 = env.link_mass  # Pendulum mass
+        g = env.gravity  # Gravity
+        l = env.link_size[1] / 2  # Link half-length
+        base_size = env.base_size  # Base dimensions (w, h)
+        link_size = env.link_size  # Link dimensions (w, h)
 
-    # pid_theta = PIDAgent(P=18.27, I=13.91, D=3.224)
-    # pid_x = PIDAgent(P=52.35, I=102.93, D=10)
+        # Calculate moments of inertia using pymunk
+        I_link = pymunk.moment_for_box(m2, link_size)  # Moment of inertia for pendulum
+        denom = I_link + m2 * (l**2)  # Effective denominator for linearization
 
+        # State-space matrices
+        A = np.array([
+            [0, 1, 0, 0],
+            [0, 0, -(m2 * g * l) / denom, 0],
+            [0, 0, 0, 1],
+            [0, 0, g * (m1 + m2) / denom, 0]
+        ])
+        
+        B = np.array([
+            [0],
+            [1 / denom],
+            [0],
+            [-l / denom]
+        ])
+
+        # Define Q and R matrices
+        Q = np.diag([10, 1, 10000, 1])  # Penalize x, x_dot, theta, theta_dot
+        R = np.diag([0.1])           # Penalize control effort
+
+        return A, B, Q, R
+
+    A, B, Q, R = compute_system_matrices(env)
+    
+    lqr_agent = LQRAgent(A, B, Q, R)
 
     obs_goal = np.array([env.groove_length/2, 0, 90, 0]) # x, xdot, theta, theta_dot
-
     obs, _ = env.reset()
-
     total_reward = 0
     
     env.base_body.apply_force_at_local_point((env.actuation_max*25, 0)) # initial push to the right
@@ -53,12 +83,10 @@ if __name__ == "__main__":
 
             print(f"Disturbance: {force}")
         
-        error_theta = obs_goal[2] - obs[2]     # deg
-        error_x = (obs_goal[0] - obs[0]) / 10  # cm
+        error = obs_goal - obs
 
         action = 0
-        action += pid_theta.choose_action(error_theta, dt) 
-        # action += pid_x.choose_action(error_x, dt)
+        action += lqr_agent.choose_action(error) 
 
         obs, reward, done, _, info = env.step(action)
         total_reward += reward
@@ -69,8 +97,7 @@ if __name__ == "__main__":
                 action, 
                 # obs[2],
                 # obs[0],
-                error_theta,
-                error_x,
+                error,
                 #np.round(reward,2),
                 #total_reward,
                 # np.round(obs_error,2)
