@@ -4,10 +4,18 @@ import threading
 import time
 import atexit
 
+# List of commands to display at the top of the message box
+commands_list = [
+    "COMMAND 1: Turn on LED",
+    "COMMAND 2: Turn off LED",
+    "COMMAND 3: Read sensor data",
+    "COMMAND 4: Reset system"
+]
+
 # Configure serial port
 arduino = serial.Serial(port='/dev/ttyUSB0', baudrate=9600, timeout=1)  # Replace with your port
-max_log_lines = 20  # Set the maximum number of log lines
-max_plot_points = 100  # Maximum number of points to display in the plot
+max_log_lines = 5  # Set the maximum number of log lines
+max_plot_points = 50  # Maximum number of points to display in the plot
 
 # Store plot data for four separate series
 plot_data_1 = []
@@ -54,7 +62,7 @@ def read_data():
                     add_log_entry(f"Invalid data (expected 4 values): {data}")
             except ValueError:
                 add_log_entry(f"Invalid data: {data}")
-        time.sleep(0.01)
+        time.sleep(0.1)
 
 def add_log_entry(entry):
     """Add a new log entry and ensure the log has a fixed number of lines."""
@@ -101,6 +109,13 @@ dpg.create_context()
 dpg.create_viewport(title='Arduino Communication with Plot', width=800, height=600)
 
 with dpg.window(label="Arduino Communication", width=800, height=600):
+    # Display the list of commands at the top
+    dpg.add_text("Available Commands:")
+    for command in commands_list:
+        dpg.add_text(f"- {command}")
+    
+    dpg.add_separator()
+    
     # Input and Send button area
     with dpg.group(horizontal=True):
         dpg.add_text("Enter command:")
@@ -109,13 +124,13 @@ with dpg.window(label="Arduino Communication", width=800, height=600):
     dpg.add_separator()
 
     # Log Window to display sent and received data
-    with dpg.child_window(label="Log Window", tag="Log Window", width=-1, height=200, border=False):
+    with dpg.child_window(label="Log Window", tag="Log Window", width=-1, height=120, border=False):
         pass
 
     # Real-time plot
     dpg.add_separator()
     with dpg.plot(label="Real-Time Data Plot", height=300, width=-1):
-        dpg.add_plot_axis(dpg.mvXAxis, label="Samples", tag="x_axis")
+        dpg.add_plot_axis(dpg.mvXAxis, label="Time", tag="x_axis")
         with dpg.plot_axis(dpg.mvYAxis, label="Values", tag="y_axis"):
             # Add 4 line series for the 4 values
             dpg.add_line_series([], [], label="Value 1", tag="plot_series_1")
