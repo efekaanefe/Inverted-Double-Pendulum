@@ -1,13 +1,16 @@
 
-gravity=-9.81*100
-dt = 1 / 200
-base_size=(30, 30)
-base_mass=2
-link_size=(10, 300)
+# UNITS ARE -> kg, m, s, N
+# TODO: change all the test and train scripts to use these units
+
+gravity=-9.81
+dt = 1 / 100
+base_size=(0.01, 0.01)
+base_mass=1
+link_size=(0.002, 0.25)
 link_mass=0.1
-groove_length = 1500
+groove_length = 0.7
 max_steps = 10 // dt
-actuation_max=1000 # force or speed
+actuation_max=10 # force 
 margin = 1
 
 # # for workshop
@@ -16,3 +19,4 @@ margin = 1
 # link_size=(1, 30)
 # link_mass=0.1
 # actuation_max=1500 # force or speed
+

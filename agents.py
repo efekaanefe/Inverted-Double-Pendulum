@@ -16,7 +16,7 @@ class PIDAgent:
         # action = sigmoid(pid).astype(np.int16)
 
         max_limit = 255; min_limit = -max_limit
-        action = max(min(action, max_limit), min_limit)
+        # action = max(min(action, max_limit), min_limit)
 
         return action
 

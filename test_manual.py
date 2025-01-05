@@ -3,7 +3,7 @@ from inverted_pendulum_env import InvertedPendulumEnv
 from constants import *
 
 
-DEBUG = True
+DEBUG = False
 LOG = False
 SAVE = False
 
@@ -16,16 +16,14 @@ if __name__ == "__main__":
             link_size=link_size, 
             link_mass=link_mass,
             groove_length = groove_length,
-            max_steps = max_steps * 10,
-            actuation_max=actuation_max, # force or speed
+            max_steps = max_steps,
+            actuation_max=10, # force or speed
             margin = margin,
             render_mode = "human",
             input_mode = "human",
-            # control_type="stabilization"
-            control_type="swing-up"
+            control_type="stabilization"
+            # control_type="swing-up"
             ) 
-
-    env.render_scale = 0.5
 
     obs_goal = np.array([env.groove_length/2, 0, 90, 0]) # x, xdot, theta, theta_dot
 
@@ -47,18 +45,18 @@ if __name__ == "__main__":
         action = env.actuation_max
         obs, reward, done, _, info = env.step(action)
         total_reward += reward
-        
 
         if LOG:
 
             obs_log.append([
-                obs[0]/100,        # m
-                obs[1]/100,        # m/s
-                obs[2],             # deg
-                np.rad2deg(obs[3])]) # deg/s
+                obs[0],                 # m
+                obs[1],                 # m/s
+                np.rad2deg(obs[2]),     # deg
+                np.rad2deg(obs[3])])    # deg/s
             try:
-              force_log.append(info["force"]/100) # N
+              force_log.append(info["force"]) # N
             except:
+                print("breaking")
                 break
 
         if DEBUG:

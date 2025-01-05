@@ -4,7 +4,7 @@ from constants import *
 from agents import PIDAgent
 
 DEBUG = True
-dt = 1/100
+dt = 1/200
 
 if __name__ == "__main__":
     env = InvertedPendulumEnv(
@@ -16,7 +16,7 @@ if __name__ == "__main__":
             link_mass=link_mass,
             groove_length = groove_length,
             max_steps = max_steps * 100,
-            actuation_max=255, # force or speed
+            actuation_max=actuation_max, # force or speed
             margin = margin,
             render_mode = "human",
             input_mode = "agent",
@@ -24,10 +24,10 @@ if __name__ == "__main__":
             # control_type="swing-up"
             ) 
 
-    pid_theta = PIDAgent(P=100, I=0, D=50)
+    pid_theta = PIDAgent(P=10, I=0, D=5)
     pid_x = PIDAgent(P=10, I=0, D=0)
 
-    obs_goal = np.array([env.groove_length/2, 0, 90, 0]) # x, xdot, theta, theta_dot
+    obs_goal = np.array([env.groove_length/2, 0, np.deg2rad(90), 0]) # x, xdot, theta, theta_dot
 
     obs, _ = env.reset()
 
@@ -54,7 +54,7 @@ if __name__ == "__main__":
         error_x = (obs_goal[0] - obs[0]) / 10  # cm
 
         action = 0
-        action += pid_theta.choose_action(error_theta, dt) 
+        action += pid_theta.choose_action(error_theta, dt) / 100
         # action += pid_x.choose_action(error_x, dt)
 
         obs, reward, done, _, info = env.step(action)
@@ -63,9 +63,8 @@ if __name__ == "__main__":
         if DEBUG:
             print(
                 # iter,
-                # action, 
-                obs[2],
-                # obs[0],
+                action, 
+                # obs,
                 error_theta,
                 # error_x,
                 #np.round(reward,2),

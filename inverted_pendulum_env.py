@@ -43,6 +43,8 @@ class InvertedPendulumEnv(gym.Env):
         self.margin = margin # for reward
 
         self.groove_y = 0
+        
+        self.meter2pixel = 2000
 
         # Pygame setup
         self.screen = None
@@ -141,21 +143,18 @@ class InvertedPendulumEnv(gym.Env):
             mouse_x, mouse_y = pygame.mouse.get_pos()
             center_x = self.window_width // 2
             if mouse_x == center_x:
-                speed = 0
+                force = 0
             elif mouse_x > center_x:
-                speed = self.actuation_max * (mouse_x - center_x) / (self.window_width // 2)
+                force = self.actuation_max * (mouse_x - center_x) / (self.window_width // 2)
             else:
-                speed = -self.actuation_max * (center_x - mouse_x) / (self.window_width // 2)        
-            if 0 < self.base_body.position.x < self.groove_length: # while inside the groove, 
-                force = speed
-                self.base_body.apply_force_at_local_point((force,0))
-                info["force"] = force
-                #self.base_body.velocity = (speed, 0)
-                #print(speed)
+                force = -self.actuation_max * (center_x - mouse_x) / (self.window_width // 2)        
+            # speed = force 
+            self.base_body.apply_force_at_local_point((force,0))
+            info["force"] = force
 
         elif self.input_mode == "agent":
             # force = -self.actuation_max + action # use this for neat or rl
-            force = action                     # use this for pid
+            force = action                     # use this for pid, lqr
             self.base_body.apply_force_at_local_point((force,0))
 
             #speed = action
@@ -170,13 +169,13 @@ class InvertedPendulumEnv(gym.Env):
         x_dot = self.base_body.velocity.x
         # theta = self.link_body.angle
         if self.control_type == "swing-up":
-            theta = np.rad2deg(np.mod(self.link_body.angle + np.deg2rad(270), 2 * np.pi)) #/ 360
+            theta = np.mod(self.link_body.angle + np.deg2rad(270), 2 * np.pi)
         elif self.control_type == "stabilization":
-            theta = np.rad2deg(np.mod(self.link_body.angle + np.deg2rad(90), 2 * np.pi)) #/ 360
+            theta = np.mod(self.link_body.angle + np.deg2rad(90), 2 * np.pi)
 
-        theta_dot = np.deg2rad(self.link_body.angular_velocity) # deg/s
+        theta_dot = self.link_body.angular_velocity 
         
-        obs = np.array([x, x_dot, theta, theta_dot], dtype=np.float32)
+        obs = np.array([x, x_dot, theta, theta_dot], dtype=np.float32) # m, m/s, rad, rad/s:
         
         #  # Calculate reward
         # self.reward = 0;
@@ -293,34 +292,41 @@ class InvertedPendulumEnv(gym.Env):
      #            self.base_body.apply_force_at_local_point((force,0))
      #        self.space.step(self.dt)
 
+            groove_length_px = self.groove_length * self.meter2pixel
+
              # Offsets for centering the environment
-            render_x = self.window_width / 2 - self.groove_length / 2
+            render_x = self.window_width / 2 - groove_length_px / 2
             render_y = self.window_height / 2
 
             self.screen.fill((255, 255, 255))  # Clear screen with white
             
             # Draw groove (centered using offsets)
             groove_start_x = render_x
-            groove_end_x = render_x + self.groove_length
+            groove_end_x = render_x + groove_length_px
             pygame.draw.line(self.screen, (0, 0, 0), 
                              (groove_start_x, render_y), 
                              (groove_end_x, render_y), 2)
             
             # Draw base (centered using offsets)
-            base_pos = self.base_body.position
-            base_size = self.base_size
+            base_pos_px = self.base_body.position * self.meter2pixel
+            base_size_px = (self.base_size[0] * self.meter2pixel, self.base_size[1] * self.meter2pixel)
             base_rect = pygame.Rect(
-                render_x + base_pos.x - base_size[0] / 2,
-                render_y - base_pos.y - base_size[1] / 2,
-                base_size[0],
-                base_size[1]
+                render_x + base_pos_px.x - base_size_px[0] / 2,
+                render_y - base_pos_px.y - base_size_px[1] / 2,
+                base_size_px[0],
+                base_size_px[1]
             )
+            
+            # print(base_pos_px.x, base_pos_px.y, base_size_px[0], base_size_px[1])
+            
             pygame.draw.rect(self.screen, (0, 102, 153), base_rect)
             
             # Draw pendulum link (centered using offsets)
-            pivot_pos = (render_x + base_pos.x, render_y - base_pos.y)
-            link_pos = (render_x + self.link_body.position.x, render_y - self.link_body.position.y)
-            pygame.draw.line(self.screen, (255, 153, 51), pivot_pos, link_pos, self.link_size[0])
+            pivot_pos_px = (render_x + base_pos_px.x, render_y - base_pos_px.y)
+            link_pos_px = (render_x + self.link_body.position.x * self.meter2pixel, render_y - self.link_body.position.y * self.meter2pixel)
+            link_thickness_px = int(self.link_size[0]*self.meter2pixel)
+
+            pygame.draw.line(self.screen, (255, 153, 51), pivot_pos_px, link_pos_px, link_thickness_px)
 
             if manual_test:
                 center_x = self.window_width // 2  

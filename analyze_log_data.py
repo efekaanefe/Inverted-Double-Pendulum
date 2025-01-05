@@ -10,16 +10,19 @@ x_dot = obs_data[:,1]
 theta = obs_data[:,2]
 theta_dot = obs_data[:,3]
 
+
 dt = dt # s
-num_steps = obs_data.shape[0]  # Number of time steps from obs_data
+num_steps = obs_data.shape[0] # Number of time steps from obs_data
 t = np.arange(0, num_steps * dt, dt)
+
+# print(t.shape, force.shape, x.shape, x_dot.shape, theta.shape, theta_dot.shape) # these should have the same shape
 
 M = base_mass # kg
 m = link_mass # kg
 
-cart_size = np.array(base_size)/100 # m
-link_size = np.array(link_size)/100 # m
-groove_length = groove_length/100   # m
+cart_size = np.array(base_size) # m
+link_size = np.array(link_size) # m
+groove_length = groove_length   # m
 
 r_pulley = 18.5e-3   # m, assumed
 
