@@ -85,8 +85,8 @@ if __name__ == "__main__":
         ])
             
         # Define Q and R matrices
-        Q = np.diag([5000, 0, 100, 0]) # Penalize x, x_dot, theta, theta_dot
-        R = np.diag([1])           # Penalize control effort
+        Q = np.diag([1200, 0, 1500, 0]) # Penalize x, x_dot, theta, theta_dot
+        R = np.diag([0.035])           # Penalize control effort
 
         return A, B, Q, R
 
@@ -106,7 +106,7 @@ if __name__ == "__main__":
     total_reward = 0
 
     # env.base_body.apply_force_at_local_point((env.actuation_max, 0)) # initial push to the right
-    env.link_body.apply_force_at_local_point((env.actuation_max*0.5, 0)) # initial push to the right
+    env.link_body.apply_force_at_local_point((env.actuation_max, 0)) # initial push to the right
 
     for iter in range(int(max_steps * 100)):
         # disturbance
@@ -123,13 +123,20 @@ if __name__ == "__main__":
         scale = 1000
         error[0] /= scale 
         error[1] /= scale 
-        # error[2] = np.deg2rad(error[2]) 
-        # error[3] = np.deg2rad(error[3]) 
+        error[2] = np.deg2rad(error[2]) * 1
+        error[3] = np.deg2rad(error[3]) * 1
         
         error[2] *= -1
         error[3] *= -1
 
-        action = lqr_agent.choose_action(error)
+        r = 0.006
+        kt = 0.031
+        kb = 0.031
+        Rm = 12.5
+    
+        voltage = lqr_agent.choose_action(error) 
+        action = force = voltage * kt * r / (Rm * r**2) * 250
+        
         # action = 0
 
         # action /= 100
@@ -140,7 +147,9 @@ if __name__ == "__main__":
         if DEBUG:
             print(
                 # iter,
-                action, 
+                voltage,
+                # force/voltage,
+                # action, 
                 # obs,
                 error,
                 # lqr_agent.K,
