@@ -150,14 +150,13 @@ class InvertedPendulumEnv(gym.Env):
             else:
                 force = -self.actuation_max * (center_x - mouse_x) / (self.window_width // 2)        
             # speed = force 
-            # self.base_body.apply_force_at_local_point((force,0))
-            self.base_body.apply_force_at_world_point((force,0), (0,0))
+            self.base_body.apply_force_at_local_point((force,0))
             info["force"] = force
 
         elif self.input_mode == "agent":
             force = -self.actuation_max + action # use this for neat or rl
             # force = action                     # use this for pid, lqr
-            self.base_body.apply_force_at_world_point((force,0), (0,0))
+            self.base_body.apply_force_at_local_point((force,0))
 
             #speed = action
             #self.base_body.velocity = (speed,0)
