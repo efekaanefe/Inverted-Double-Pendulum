@@ -21,8 +21,8 @@ if __name__ == "__main__":
             margin = margin,
             render_mode = "human",
             input_mode = "human",
-            control_type="stabilization"
-            # control_type="swing-up"
+            # control_type="stabilization"
+            control_type="swing-up"
             ) 
 
     obs_goal = np.array([env.groove_length/2, 0, 90, 0]) # x, xdot, theta, theta_dot

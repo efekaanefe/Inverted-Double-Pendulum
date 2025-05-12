@@ -13,7 +13,7 @@ commands_list = [
 ]
 
 # Configure serial port
-arduino = serial.Serial(port='/dev/ttyUSB0', baudrate=9600, timeout=1)  # Replace with your port
+# arduino = serial.Serial(port='/dev/ttyUSB0', baudrate=9600, timeout=1)  # Replace with your port
 max_log_lines = 5  # Set the maximum number of log lines
 max_plot_points = 50  # Maximum number of points to display in the plot
 
@@ -27,7 +27,7 @@ def send_command():
     """Send a string command to the Arduino."""
     command = dpg.get_value("Command Input")
     if command:
-        arduino.write((command + '\n').encode())
+        # arduino.write((command + '\n').encode())
         add_log_entry(f"Sent: {command}")
         dpg.set_value("Command Input", "")
 

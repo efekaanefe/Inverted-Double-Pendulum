@@ -1,13 +1,18 @@
 import neat
 import pickle
 import numpy as np
+import os
 from inverted_pendulum_env import InvertedPendulumEnv 
 from constants import *
 
 # TODO: make control type reached from constants
-control_type = "stabilization"
-reward = 4.44
-GENOME_PATH = f"models\\{control_type}\\neat\\best_genome_{reward}.pkl"
+control_type = "swing-up" # stabilization or swing-up
+reward = 4500
+
+genome_filename = f"best_genome_{reward}.pkl"
+GENOME_PATH = os.path.join("models", control_type, "neat", genome_filename)
+
+# GENOME_PATH = f"models\\{control_type}\\neat\\best_genome_{reward}.pkl"
 CONFIG_PATH = "config-feedforward.txt"
 
 def visualize_best_model():
@@ -66,7 +71,7 @@ def visualize_best_model():
         print(
             action,
             net.activate(obs)[0] 
-            # -env.actuation_max + action,
+            -env.actuation_max + action,
             # reward
         )
 
