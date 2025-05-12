@@ -5,7 +5,7 @@ This project simulates a single inverted pendulum using Pymunk, a 2D physics eng
 [![Watch the video](https://img.youtube.com/vi/aqPP_8_au0k/hqdefault.jpg)](https://youtu.be/aqPP_8_au0k)
 
 
-## Future Work
+## TODOs
 - Add friction to the simulation.
 - Resolve boundary issues when using speed as the control action, ensuring the base remains within the simulation window.
 - Make it double!!
