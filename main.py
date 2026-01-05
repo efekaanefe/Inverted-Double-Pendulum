@@ -1,24 +1,29 @@
 from dynamics import DoubleInvertedPendulum
 from renderer import create_animation
+from controller import controller
 
 from scipy.integrate import solve_ivp
 import numpy as np
 
 
-def simulate(dynamics_model, initial_state, t_span, dt=0.01):
-        """Simulate the system"""
-        t_eval = np.arange(t_span[0], t_span[1], dt)
-        
-        def event_boundary(t, state):
-            return abs(state[0]) - dynamics_model.position_limit
-        event_boundary.terminal = False
-        event_boundary.direction = 0
-        
-        sol = solve_ivp(dynamics_model.dynamics, t_span, initial_state, 
-                       t_eval=t_eval, method='RK45', 
-                       rtol=1e-8, atol=1e-10)
-        
-        return sol.t, sol.y.T
+def simulate(dynamics_model, controller, initial_state, t_span, dt=0.01):
+    t_eval = np.arange(t_span[0], t_span[1], dt)
+
+    def closed_loop_dynamics(t, state):
+        u = controller(t, state)
+        return dynamics_model.dynamics(t, state, u)
+
+    sol = solve_ivp(
+        closed_loop_dynamics,
+        t_span,
+        initial_state,
+        t_eval=t_eval,
+        method="RK45",
+        rtol=1e-8,
+        atol=1e-10,
+    )
+
+    return sol.t, sol.y.T
 
 
 if __name__ == "__main__":
@@ -33,7 +38,7 @@ if __name__ == "__main__":
     print("Position limits: ±{:.1f} m".format(pendulum.position_limit))
     
     # Simulate
-    times, states = simulate(pendulum, initial_state, [0, 20], dt=0.01)
+    times, states = simulate(pendulum, controller, initial_state, [0, 20], dt=0.01)
     
     print(f"Simulation completed: {len(times)} time steps")
     
