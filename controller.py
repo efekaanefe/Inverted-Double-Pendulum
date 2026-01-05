@@ -1,3 +1,3 @@
 
-def controller(t, state):
+def controller(state):
     return 0

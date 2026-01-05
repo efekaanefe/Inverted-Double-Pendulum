@@ -10,7 +10,7 @@ def simulate(dynamics_model, controller, initial_state, t_span, dt=0.01):
     t_eval = np.arange(t_span[0], t_span[1], dt)
 
     def closed_loop_dynamics(t, state):
-        u = controller(t, state)
+        u = controller(state)
         return dynamics_model.dynamics(t, state, u)
 
     sol = solve_ivp(
