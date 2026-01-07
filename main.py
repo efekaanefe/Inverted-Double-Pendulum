@@ -1,14 +1,11 @@
-from dynamics import DoubleInvertedPendulum
-from controller import MPCController
-from renderer import create_animation
-from utils import load_data, check_success_at_state
-
+from scripts.dynamics import DoubleInvertedPendulum
+from scripts.controller import MPCController
+from scripts.renderer import create_animation
+from scripts.utils import load_data, check_success_at_state
 
 from scipy.integrate import solve_ivp
 import numpy as np
 import time
-
-
 
 
 def simulate(dynamics_model, controller, initial_state, t_span, dt_control, save_results = True, filename="data/sim_results.npz"):
@@ -80,20 +77,20 @@ def simulate(dynamics_model, controller, initial_state, t_span, dt_control, save
     return t_arr, x_arr, u_arr
 
 
-SIMULATE_NEW = False
+SIMULATE_NEW = True
 
 
 if __name__ == "__main__":
     pendulum = DoubleInvertedPendulum()
 
     if SIMULATE_NEW:
-        initial_state = np.array([0.0, np.deg2rad(720), np.deg2rad(720), -0.3, 0.5, 0.5]) # state: [pos, theta1, theta2, dpos, dtheta1, dtheta2]
+        initial_state = np.array([0.0, np.deg2rad(0), np.deg2rad(0), -0.3, 0.1, 0.1]) # state: [pos, theta1, theta2, dpos, dtheta1, dtheta2]
 
         Q = [100, 100, 100, 1, 1, 1]
         R = 0.1
-        N = 1
+        N = 100
         dt_control = 0.01
-        controller = MPCController(pendulum, dt_control, N, Q, R, max_force=20.0)
+        controller = MPCController(pendulum, dt_control, N, Q, R, max_force=50.0)
 
         times, states, controls = simulate(pendulum, controller, initial_state, [0, 10.02], dt_control=dt_control, save_results = True)
     else:

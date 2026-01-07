@@ -1,6 +1,6 @@
-from dynamics import DoubleInvertedPendulum
-from renderer import create_animation
-from utils import load_data, check_success_at_state
+from scripts.dynamics import DoubleInvertedPendulum
+from scripts.renderer import create_animation
+from scripts.utils import load_data, check_success_at_state
 
 
 if __name__=="__main__":
