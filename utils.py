@@ -1,4 +1,3 @@
-from matplotlib.patches import FancyArrow
 import numpy as np
 
 def load_data(filename = "data/sim_results.npz"):
