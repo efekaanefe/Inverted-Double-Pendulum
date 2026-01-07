@@ -87,7 +87,7 @@ class DoubleInvertedPendulum:
         
         return E_kin, E_pot
     
-    def dynamics(self, t, state, u = 0):
+    def dynamics(self, t, state, u = 0.0):
         """System dynamics: state = [pos, theta1, theta2, dpos, dtheta1, dtheta2], u is the control force (scalar in x)"""
         pos, theta1, theta2, dpos, dtheta1, dtheta2 = state
         
@@ -97,8 +97,10 @@ class DoubleInvertedPendulum:
         if abs(pos) >= self.position_limit:
             if pos > 0 and dpos > 0:
                 dpos = 0  # Stop at boundary
+                u = 0
             elif pos < 0 and dpos < 0:
                 dpos = 0
+                u = 0
         
         # Construct mass matrix and force vector
         M = self.mass_matrix(theta1, theta2)
