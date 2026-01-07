@@ -1,97 +1,167 @@
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+import numpy as np
 
+def create_animation(pendulum, times, states, controls):
+    """
+    Create animation of the pendulum simulation with detailed analysis plots.
+    
+    Args:
+        pendulum: The physics model class
+        times: Array of time stamps (N)
+        states: Array of states (N x 6)
+        controls: Array of control inputs (N-1 or N)
+    """
+    fig = plt.figure(figsize=(16, 9))
+    gs = fig.add_gridspec(3, 2, width_ratios=[1.5, 1], hspace=0.3)
 
-def create_animation(pendulum, times, states):
-    """Create animation of the pendulum simulation"""
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
+    # --- 1. LEFT: Main Animation Plot ---
+    ax_anim = fig.add_subplot(gs[:, 0])
+    ax_anim.set_xlim(-pendulum.position_limit - 1, pendulum.position_limit + 1)
+    ax_anim.set_ylim(-1.5, 1.5)
+    ax_anim.set_aspect('equal')
+    ax_anim.grid(True)
+    ax_anim.set_xlabel('Position (m)')
+    ax_anim.set_ylabel('Height (m)')
+    ax_anim.set_title('Double Inverted Pendulum Simulation')
     
-    # Set up pendulum plot
-    ax1.set_xlim(-3, 3)
-    ax1.set_ylim(-1.0, 1.5)
-    ax1.set_aspect('equal')
-    ax1.grid(True)
-    ax1.set_xlabel('Position (m)')
-    ax1.set_ylabel('Height (m)')
-    ax1.set_title('Double Inverted Pendulum')
+    # Visual elements
+    ax_anim.axvline(-pendulum.position_limit, color='red', ls='--', alpha=0.3)
+    ax_anim.axvline(pendulum.position_limit, color='red', ls='--', alpha=0.3)
+    ax_anim.axhline(0, color='black', lw=1)
     
-    # Add position limits
-    ax1.axvline(-pendulum.position_limit, color='red', linestyle='--', alpha=0.5, label='Position Limits')
-    ax1.axvline(pendulum.position_limit, color='red', linestyle='--', alpha=0.5)
-    ax1.legend()
+    cart_patch = plt.Rectangle((0, 0), 0.2, 0.1, color='blue', zorder=3)
+    ax_anim.add_patch(cart_patch)
     
-    # Initialize plot elements
-    cart_patch = plt.Rectangle((0, 0), 0.2, 0.1, color='blue')
-    ax1.add_patch(cart_patch)
+    rod1_line, = ax_anim.plot([], [], 'k-', lw=4, zorder=2)
+    rod2_line, = ax_anim.plot([], [], 'r-', lw=4, zorder=2)
+    mass1_point, = ax_anim.plot([], [], 'ko', ms=8, zorder=4)
+    mass2_point, = ax_anim.plot([], [], 'ro', ms=8, zorder=4)
+    time_text = ax_anim.text(0.05, 0.95, '', transform=ax_anim.transAxes)
+
+    # --- 2. RIGHT TOP: States (Angles) ---
+    ax_states = fig.add_subplot(gs[0, 1])
+    ax_states.set_title('Joint Angles')
+    ax_states.set_ylabel('Angle (deg)')
+    ax_states.grid(True)
+    ax_states.axhline(0, color='green', ls='--', alpha=0.5, label='Target')
     
-    rod1_line, = ax1.plot([], [], 'k-', linewidth=4, label='Rod 1')
-    rod2_line, = ax1.plot([], [], 'r-', linewidth=4, label='Rod 2')
-    mass1_point, = ax1.plot([], [], 'ko', markersize=8)
-    mass2_point, = ax1.plot([], [], 'ro', markersize=8)
+    line_th1, = ax_states.plot([], [], 'b-', label='Theta 1')
+    line_th2, = ax_states.plot([], [], 'r-', label='Theta 2')
+    ax_states.legend(loc='upper right', fontsize='small')
+
+    # --- 3. RIGHT MIDDLE: Control History ---
+    ax_ctrl = fig.add_subplot(gs[1, 1], sharex=ax_states)
+    ax_ctrl.set_title('Control Input')
+    ax_ctrl.set_ylabel('Force (N)')
+    ax_ctrl.grid(True)
     
-    # Set up energy plot
-    ax2.set_xlabel('Time (s)')
-    ax2.set_ylabel('Energy (J)')
-    ax2.set_title('System Energy')
-    ax2.grid(True)
+    line_u, = ax_ctrl.step([], [], 'k-', where='post')
+
+    # --- 4. RIGHT BOTTOM: Energy ---
+    ax_energy = fig.add_subplot(gs[2, 1], sharex=ax_states)
+    ax_energy.set_title('System Energy')
+    ax_energy.set_xlabel('Time (s)')
+    ax_energy.set_ylabel('Energy (J)')
+    ax_energy.grid(True)
     
-    kinetic_line, = ax2.plot([], [], 'b-', label='Kinetic Energy')
-    potential_line, = ax2.plot([], [], 'r-', label='Potential Energy')
-    total_line, = ax2.plot([], [], 'g-', label='Total Energy')
-    ax2.legend()
+    line_ek, = ax_energy.plot([], [], 'b-', label='Kinetic', alpha=0.6)
+    line_ep, = ax_energy.plot([], [], 'r-', label='Potential', alpha=0.6)
+    line_et, = ax_energy.plot([], [], 'g-', label='Total')
+    ax_energy.legend(loc='upper right', fontsize='small')
+
+    # --- Data Pre-processing ---
+    # Convert angles to degrees for easier reading
+    theta1_deg = np.degrees(states[:, 1])
+    theta2_deg = np.degrees(states[:, 2])
     
-    # Energy data
+    # Calculate Energies
     kinetic_energies = []
     potential_energies = []
     total_energies = []
-    
-    for state in states:
-        E_kin, E_pot = pendulum.energy(state)
-        kinetic_energies.append(E_kin)
-        potential_energies.append(E_pot)
-        total_energies.append(E_kin + E_pot)
-    
+    for s in states:
+        Ek, Ep = pendulum.energy(s)
+        kinetic_energies.append(Ek)
+        potential_energies.append(Ep)
+        total_energies.append(Ek + Ep)
+
+    # Handle control array length (it might be 1 shorter than states)
+    n_frames = len(times)
+    u_plot = np.zeros(n_frames)
+    if len(controls) < n_frames:
+        u_plot[:len(controls)] = controls
+        u_plot[len(controls):] = controls[-1] # repeat last
+    else:
+        u_plot = controls[:n_frames]
+
+    def init():
+        return rod1_line, rod2_line, mass1_point, mass2_point, cart_patch, \
+               line_th1, line_th2, line_u, line_ek, line_ep, line_et
+
     def animate(frame):
-        if frame >= len(states):
-            return
+        # Stop at end
+        if frame >= n_frames: return init()
             
+        t_curr = times[:frame+1]
+        
+        # 1. Update Animation
         state = states[frame]
+        cart_pos, j1, m1, j2, m2, end = pendulum.get_pendulum_positions(state)
         
-        # Get positions
-        cart_pos, joint1_pos, mass1_pos, joint2_pos, mass2_pos, end_pos = \
-            pendulum.get_pendulum_positions(state)
-        
-        # Update cart
-        cart_patch.set_x(cart_pos[0] - 0.1)
+        cart_patch.set_x(cart_pos[0] - 0.1) # Center the 0.2 width cart
         cart_patch.set_y(cart_pos[1] - 0.05)
         
-        # Update rods
-        rod1_line.set_data([joint1_pos[0], joint2_pos[0]], 
-                          [joint1_pos[1], joint2_pos[1]])
-        rod2_line.set_data([joint2_pos[0], end_pos[0]], 
-                          [joint2_pos[1], end_pos[1]])
+        rod1_line.set_data([j1[0], j2[0]], [j1[1], j2[1]])
+        rod2_line.set_data([j2[0], end[0]], [j2[1], end[1]])
+        mass1_point.set_data([m1[0]], [m1[1]])
+        mass2_point.set_data([m2[0]], [m2[1]])
+        time_text.set_text(f'Time: {times[frame]:.2f} s')
+
+        # 2. Update Angles
+        # line_th1.set_data(t_curr, theta1_deg[:frame+1])
+        # line_th2.set_data(t_curr, theta2_deg[:frame+1])
+        th1_wrapped = (theta1_deg[:frame+1] + 180) % 360 - 180
+        th2_wrapped = (theta2_deg[:frame+1] + 180) % 360 - 180
+        line_th1.set_data(t_curr, th1_wrapped)
+        line_th2.set_data(t_curr, th2_wrapped)
         
-        # Update masses
-        mass1_point.set_data([mass1_pos[0]], [mass1_pos[1]])
-        mass2_point.set_data([mass2_pos[0]], [mass2_pos[1]])
+        # 3. Update Control
+        line_u.set_data(t_curr, u_plot[:frame+1])
         
-        # Update energy plot
-        current_time = times[:frame+1]
-        kinetic_line.set_data(current_time, kinetic_energies[:frame+1])
-        potential_line.set_data(current_time, potential_energies[:frame+1])
-        total_line.set_data(current_time, total_energies[:frame+1])
+        # 4. Update Energy
+        line_ek.set_data(t_curr, kinetic_energies[:frame+1])
+        line_ep.set_data(t_curr, potential_energies[:frame+1])
+        line_et.set_data(t_curr, total_energies[:frame+1])
         
+        # Dynamic Scaling for Right plots
         if frame > 0:
-            ax2.set_xlim(0, times[frame])
-            ax2.set_ylim(min(min(kinetic_energies[:frame+1]), 
-                            min(potential_energies[:frame+1])) - 1,
-                        max(max(kinetic_energies[:frame+1]), 
-                            max(potential_energies[:frame+1])) + 1)
+            # Angles
+            curr_min = min(np.min(th1_wrapped), np.min(th2_wrapped))
+            curr_max = max(np.max(th1_wrapped), np.max(th2_wrapped))
+            ax_states.set_xlim(0, times[frame])
+            ax_states.set_ylim(curr_min - 10, curr_max + 10)
+            
+            # Controls
+            u_min, u_max = np.min(u_plot[:frame+1]), np.max(u_plot[:frame+1])
+            margin = (u_max - u_min) * 0.1 + 1.0 # Add margin + min 1.0 pad
+            ax_ctrl.set_ylim(u_min - margin, u_max + margin)
+            
+            # Energy
+            e_min = min(min(kinetic_energies[:frame+1]), min(potential_energies[:frame+1]))
+            e_max = max(max(kinetic_energies[:frame+1]), max(potential_energies[:frame+1]))
+            ax_energy.set_ylim(e_min - 5, e_max + 5)
+
+        return rod1_line, rod2_line, mass1_point, mass2_point, cart_patch, \
+               line_th1, line_th2, line_u, line_ek, line_ep, line_et
+
+    # Use interval based on dt to keep roughly real-time (or slower)
+    interval_ms = 1000 * (times[1] - times[0])
     
-    anim = animation.FuncAnimation(fig, animate, frames=len(states), 
-                                  interval=50, blit=False, repeat=True)
+    anim = animation.FuncAnimation(
+        fig, animate, init_func=init, frames=n_frames, 
+        interval=interval_ms, blit=False, repeat=False
+    )
     
     plt.tight_layout()
     plt.show()
-
     return fig, anim
