@@ -2,6 +2,7 @@ import numpy as np
 
 def load_data(filename = "data/sim_results.npz"):
     data = np.load(filename)
+    print("Loaded data")
     return data['time'], data['states'], data['controls']
 
 
