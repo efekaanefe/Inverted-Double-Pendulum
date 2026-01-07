@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import numpy as np
 
-def create_animation(pendulum, times, states, controls):
+def create_animation(pendulum, times, states, controls, filename = None):
     """
     Create animation of the pendulum simulation with detailed analysis plots.
     
@@ -161,6 +161,9 @@ def create_animation(pendulum, times, states, controls):
         fig, animate, init_func=init, frames=n_frames, 
         interval=interval_ms, blit=False, repeat=False
     )
+
+    if filename is not None:
+        anim.save(filename, writer=animation.PillowWriter(fps=30))
     
     plt.tight_layout()
     plt.show()
