@@ -1,5 +1,8 @@
 # Inverted-Double-Pendulum
 
+## Double Inverted Pendulum MPC
+![Inverted Pendulum Stabilization](gifs/stabilize_upwards_inverted.gif)
+
 ## 📺 Demos for Capstone Project
 
 Physical System:
