@@ -5,6 +5,8 @@ from scripts.utils import load_data, check_success_at_state
 
 if __name__=="__main__":
     filename = "data/stabilize_downwards.npz"
+    filename = "data/stabilize_upwards.npz"
+    filename = "data/stabilize_upwards_inverted.npz"
 
     pendulum = DoubleInvertedPendulum()
     times, states, controls = load_data(filename)
