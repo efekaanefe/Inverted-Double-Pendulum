@@ -84,15 +84,29 @@ if __name__ == "__main__":
     pendulum = DoubleInvertedPendulum()
 
     if SIMULATE_NEW:
-        initial_state = np.array([0.0, np.deg2rad(0), np.deg2rad(0), -0.3, 0.1, 0.1]) # state: [pos, theta1, theta2, dpos, dtheta1, dtheta2]
+        # state: [pos, theta1, theta2, dpos, dtheta1, dtheta2]
+        # initial_state = np.array([0.0, np.deg2rad(0), np.deg2rad(0), -0.3, 0.1, 0.1]) # start upwards 
+        initial_state = np.array([0.2, np.deg2rad(180), np.deg2rad(180), 0.1, 0.0, 0.0])   # start downwards
 
-        Q = [100, 100, 100, 1, 1, 1]
-        R = 0.1
-        N = 100
-        dt_control = 0.01
-        controller = MPCController(pendulum, dt_control, N, Q, R, max_force=50.0)
+        N = 100              
+        dt_control = 0.01   
+        W_V = 10.0     
+        W_T = 10.0     
+        W_pos = 50.0         
+        W_u = 0.1           
+        max_force = 50.0    
 
-        times, states, controls = simulate(pendulum, controller, initial_state, [0, 10.02], dt_control=dt_control, save_results = True)
+        controller = MPCController(
+            pendulum, 
+            dt_control, 
+            N, 
+            weight_V=W_V, 
+            weight_T=W_T, 
+            weight_pos=W_pos, 
+            weight_u=W_u, 
+            max_force=max_force
+        )
+        times, states, controls = simulate(pendulum, controller, initial_state, [0, 5.0], dt_control=dt_control, save_results = True)
     else:
         times, states, controls = load_data()
 
